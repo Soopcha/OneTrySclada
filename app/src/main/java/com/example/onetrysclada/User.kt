@@ -14,7 +14,7 @@ data class Shipment(
     val shipment_id: Int,
     val quantity: Int,
     val date_of_shipment: String,
-    val user: User
+    val user: Int // Изменено с `User` на `Int`
 )
 
 data class WriteOffOfProducts(
@@ -22,14 +22,14 @@ data class WriteOffOfProducts(
     val product_write_off_date: String,
     val quantity: Int,
     val reason: String,
-    val user: User
+    val user: Int // Изменено с `User` на `Int`
 )
 
 data class Extradition(
     val extradition_id: Int,
     val date_of_extradition: String,
     val quantity: Int,
-    val user: User
+    val user: Int // Изменено с `User` на `Int`
 )
 
 data class Product(
@@ -39,9 +39,9 @@ data class Product(
     val product_type: String,
     val manufacturer: String,
     val weight: Double,
-    val shipment: Shipment,
-    val write_off_of_products: WriteOffOfProducts?,
-    val extradition: Extradition?
+    val shipment: Int, // Изменено с `Shipment` на `Int`
+    val write_off_of_products: Int?, // Изменено с `WriteOffOfProducts?` на `Int`
+    val extradition: Int? // Изменено с `Extradition?` на `Int`
 )
 
 data class ProductsCurrentQuantity(

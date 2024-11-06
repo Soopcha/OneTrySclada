@@ -62,61 +62,6 @@
                 android:layout_height="wrap_content"
                 android:stretchColumns="1,2,3,4,5,6">
 
-                <TableRow>
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="ID"
-                        android:layout_weight="1"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:layout_marginStart="16dp"/>
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="Name"
-                        android:layout_weight="1"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:layout_marginStart="16dp"/>
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="Login"
-                        android:layout_weight="1"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:layout_marginStart="16dp"/>
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="Password"
-                        android:layout_weight="1"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp" />
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="Email"
-                        android:layout_weight="1"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp" />
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="Phone Number"
-                        android:layout_weight="1"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp" />
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="Role"
-                        android:layout_weight="1"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp" />
-                </TableRow>
-
                 <!-- Здесь добавьте строки для данных пользователей -->
                 <!-- Например, добавьте TableRow для каждого пользователя -->
                 <!-- Ваш код добавления строк будет в fetchUsers() -->
