@@ -1,11 +1,21 @@
 package com.example.onetrysclada
 
+import android.app.AlertDialog
 import android.content.Context
 import android.graphics.Color
+// import android.telecom.Call
+import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.view.WindowInsetsAnimation
+import android.widget.Button
+import android.widget.EditText
 import android.widget.TableLayout
 import android.widget.TableRow
 import android.widget.TextView
+import android.widget.Toast
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class TableAdapter<T>(
     private val context: Context,
@@ -61,6 +71,13 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.email))
                     row.addView(createTextView(item.phone_number ?: ""))
                     row.addView(createTextView(item.role))
+                    val editButton = Button(context).apply {
+                        text = "Edit"
+                        setOnClickListener {
+                            openEditDialog(item) // Call a function to open the edit dialog
+                        }
+                    }
+                    row.addView(editButton)
                 }
                 is Shipment -> {
                     row.addView(createTextView(item.shipment_id.toString()))
@@ -99,4 +116,114 @@ class TableAdapter<T>(
         }
     }
 
+//    private fun openEditDialog(user: User) {
+//        val dialog = AlertDialog.Builder(context)
+//        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_user, null)
+//        dialog.setView(dialogView)
+//
+//        // Найдите EditText-ы из разметки диалога и установите начальные значения
+//        val nameEditText = dialogView.findViewById<EditText>(R.id.edit_user_name)
+//        val loginEditText = dialogView.findViewById<EditText>(R.id.edit_user_login)
+//        val emailEditText = dialogView.findViewById<EditText>(R.id.edit_user_email)
+//        // Устанавливаем значения
+//        nameEditText.setText(user.user_name)
+//        loginEditText.setText(user.login)
+//        emailEditText.setText(user.email)
+//
+//        dialog.setPositiveButton("Сохранить") { _, _ ->
+//            // Получаем новые значения
+//            val newName = nameEditText.text.toString()
+//            val newLogin = loginEditText.text.toString()
+//            val newEmail = emailEditText.text.toString()
+//
+//            // Вызываем API для обновления данных пользователя
+//            updateUser(user.user_id, newName, newLogin, newEmail)
+//        }
+//
+//        dialog.setNegativeButton("Отмена", null)
+//        dialog.create().show()
+//    }
+//
+//
+//    fun updateUser(user: User) {
+//        val apiService = RetrofitClient.instance.create(ApiService::class.java)
+//        val call = apiService.updateUser(user.user_id, user)
+//
+//        call.enqueue(object : WindowInsetsAnimation.Callback<User> {
+//            override fun onResponse(call: Call<User>, response: Response<User>) {
+//                if (response.isSuccessful) {
+//                    // Update the UI
+//                    populateTable("User")
+//                } else {
+//                    Toast.makeText(context, "Failed to update user", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//
+//            override fun onFailure(call: Call<User>, t: Throwable) {
+//                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+//            }
+//        })
+//    }
+
+
+    private fun openEditDialog(user: User) {
+        val dialog = AlertDialog.Builder(context)
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_user, null)
+        dialog.setView(dialogView)
+
+        val nameEditText = dialogView.findViewById<EditText>(R.id.edit_user_name)
+        val loginEditText = dialogView.findViewById<EditText>(R.id.edit_user_login)
+        val emailEditText = dialogView.findViewById<EditText>(R.id.edit_user_email)
+        val passwordEditText =  dialogView.findViewById<EditText>(R.id.edit_user_password)
+        val phoneNumberEditText = dialogView.findViewById<EditText>(R.id.edit_user_phone_number)
+        val roleEditText = dialogView.findViewById<EditText>(R.id.edit_user_role)
+
+        //записываем в поля что было до будущих изменений
+        nameEditText.setText(user.user_name)
+        loginEditText.setText(user.login)
+        emailEditText.setText(user.email)
+        passwordEditText.setText(user.password)
+        phoneNumberEditText.setText(user.phone_number)
+        roleEditText.setText(user.role)
+
+        dialog.setPositiveButton("Сохранить") { _, _ ->
+            val newName = nameEditText.text.toString()
+            val newLogin = loginEditText.text.toString()
+            val newEmail = emailEditText.text.toString()
+            val newPassword = passwordEditText.text.toString()
+            val newPhoneNumber = phoneNumberEditText.text.toString()
+            val newRole = roleEditText.text.toString()
+
+            // Вызов API с новыми параметрами
+            updateUser(user.user_id, newName, newEmail, newLogin, newPassword, newPhoneNumber, newRole)
+        }
+
+        dialog.setNegativeButton("Отмена", null)
+        dialog.create().show()
+    }
+
+    private fun updateUser(user_id: Int, user_name: String, email: String, login: String, password: String, phone_number: String?, role: String) {
+
+        val apiService = RetrofitClient.apiService
+
+        //val call = apiService.updateUser(user_id, User(user_id, user_name, email, login,password, phone_number,role))
+        val updatedUser = User(user_id = user_id, user_name = user_name, email = email, login = login, password = password, phone_number = phone_number, role = role)
+
+        val call = apiService.updateUser(user_id, updatedUser)
+
+        call.enqueue(object : Callback<User> {
+            override fun onResponse(call: Call<User>, response: Response<User>) {
+                if (response.isSuccessful) {
+                    populateTable("User")
+                } else {
+                    Toast.makeText(context, "Failed to update user", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<User>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
 }
+
