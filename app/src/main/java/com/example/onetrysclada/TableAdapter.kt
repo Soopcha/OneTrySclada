@@ -56,6 +56,24 @@ class TableAdapter<T>(
                 headerRow.addView(createTextView("Write off of products"))
                 headerRow.addView(createTextView("Extradition"))
             }
+            "Extradition" -> {
+                headerRow.addView(createTextView("Extradition ID"))
+                headerRow.addView(createTextView("Date of extradition"))
+                headerRow.addView(createTextView("Quantity"))
+                headerRow.addView(createTextView("User"))
+            }
+            "ProductsCurrentQuantity" -> {
+                headerRow.addView(createTextView("Product current quantity ID"))
+                headerRow.addView(createTextView("Quantity"))
+                headerRow.addView(createTextView("Product"))
+            }
+            "WriteOffProducts" -> {
+                headerRow.addView(createTextView("Product Write-off ID"))
+                headerRow.addView(createTextView("Product_write_off_date"))
+                headerRow.addView(createTextView("Quantity"))
+                headerRow.addView(createTextView("Reason"))
+                headerRow.addView(createTextView("User"))
+            }
         }
         tableLayout.addView(headerRow)
 
@@ -98,6 +116,24 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.write_off_of_products?.toString() ?: "N/A"))
                     row.addView(createTextView(item.extradition?.toString() ?: "N/A"))
                 }
+                is WriteOffOfProducts -> {
+                    row.addView(createTextView(item.id_product_write_off.toString()))
+                    row.addView(createTextView(item.product_write_off_date))
+                    row.addView(createTextView(item.quantity.toString()))
+                    row.addView(createTextView(item.reason))
+                    row.addView(createTextView(item.user.toString()))
+                }
+                is Extradition -> {
+                    row.addView(createTextView(item.extradition_id.toString()))
+                    row.addView(createTextView(item.date_of_extradition))
+                    row.addView(createTextView(item.quantity.toString()))
+                    row.addView(createTextView(item.user.toString()))
+                }
+                is ProductsCurrentQuantity -> {
+                    row.addView(createTextView(item.product_current_quantity_id.toString()))
+                    row.addView(createTextView(item.quantity.toString()))
+                    row.addView(createTextView(item.product.toString()))
+                }
             }
             tableLayout.addView(row)
         }
@@ -115,55 +151,6 @@ class TableAdapter<T>(
             )
         }
     }
-
-//    private fun openEditDialog(user: User) {
-//        val dialog = AlertDialog.Builder(context)
-//        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_user, null)
-//        dialog.setView(dialogView)
-//
-//        // Найдите EditText-ы из разметки диалога и установите начальные значения
-//        val nameEditText = dialogView.findViewById<EditText>(R.id.edit_user_name)
-//        val loginEditText = dialogView.findViewById<EditText>(R.id.edit_user_login)
-//        val emailEditText = dialogView.findViewById<EditText>(R.id.edit_user_email)
-//        // Устанавливаем значения
-//        nameEditText.setText(user.user_name)
-//        loginEditText.setText(user.login)
-//        emailEditText.setText(user.email)
-//
-//        dialog.setPositiveButton("Сохранить") { _, _ ->
-//            // Получаем новые значения
-//            val newName = nameEditText.text.toString()
-//            val newLogin = loginEditText.text.toString()
-//            val newEmail = emailEditText.text.toString()
-//
-//            // Вызываем API для обновления данных пользователя
-//            updateUser(user.user_id, newName, newLogin, newEmail)
-//        }
-//
-//        dialog.setNegativeButton("Отмена", null)
-//        dialog.create().show()
-//    }
-//
-//
-//    fun updateUser(user: User) {
-//        val apiService = RetrofitClient.instance.create(ApiService::class.java)
-//        val call = apiService.updateUser(user.user_id, user)
-//
-//        call.enqueue(object : WindowInsetsAnimation.Callback<User> {
-//            override fun onResponse(call: Call<User>, response: Response<User>) {
-//                if (response.isSuccessful) {
-//                    // Update the UI
-//                    populateTable("User")
-//                } else {
-//                    Toast.makeText(context, "Failed to update user", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<User>, t: Throwable) {
-//                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
-//            }
-//        })
-//    }
 
 
     private fun openEditDialog(user: User) {
@@ -225,5 +212,8 @@ class TableAdapter<T>(
             }
         })
     }
+
+
+
 }
 

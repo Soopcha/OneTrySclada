@@ -35,12 +35,42 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginBottom="16dp" />
 
+    <Button
+        android:id="@+id/write_off_products_button"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Write-Offs"
+        app:layout_constraintTop_toBottomOf="@id/product_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/products_current_quantity_button"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Products current quantity"
+        app:layout_constraintTop_toBottomOf="@id/write_off_products_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/extradition_button"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Extradition"
+        app:layout_constraintTop_toBottomOf="@id/products_current_quantity_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="16dp" />
+
     <TextView
         android:id="@+id/table_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="This is the Table Layout"
-        app:layout_constraintTop_toBottomOf="@id/product_button"
+        app:layout_constraintTop_toBottomOf="@id/extradition_button"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_margin="16dp" />
 

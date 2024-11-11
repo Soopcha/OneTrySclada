@@ -47,5 +47,5 @@ data class Product(
 data class ProductsCurrentQuantity(
     val product_current_quantity_id: Int,
     val quantity: Int,
-    val product: Product
+    val product: Int // Изменено с `Product` на `Int`
 )

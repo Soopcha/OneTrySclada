@@ -8,7 +8,6 @@ import androidx.core.view.WindowInsetsCompat
 import android.util.Log
 import android.widget.Button
 import android.widget.TableLayout
-import android.widget.TableRow
 import android.widget.TextView
 import retrofit2.Call
 import retrofit2.Callback
@@ -21,6 +20,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var userButton: Button
     private lateinit var shipmentButton: Button
     private lateinit var productButton: Button
+    private lateinit var writeOffProductsButton: Button
+    private lateinit var productsCurrentQuantityButton: Button
+    private lateinit var extraditionButton: Button
+
+
+
     private lateinit var tableTitle: TextView // TextView для вывода заголовка таблицы
 
 
@@ -50,6 +55,9 @@ class MainActivity : AppCompatActivity() {
             userButton = findViewById(R.id.user_button)
             shipmentButton = findViewById(R.id.shipment_button)
             productButton = findViewById(R.id.product_button)
+            writeOffProductsButton = findViewById(R.id.write_off_products_button)  // Initialize here
+            productsCurrentQuantityButton = findViewById(R.id.products_current_quantity_button)
+            extraditionButton = findViewById(R.id.extradition_button)
             tableTitle = findViewById(R.id.table_title)
 
             tableLayout = findViewById(R.id.tableLayout) // Убедитесь, что TableLayout инициализирован
@@ -62,7 +70,7 @@ class MainActivity : AppCompatActivity() {
                 //tableLayout = findViewById(R.id.tableLayout)
 
                 // Загружаем данные
-                fetchUsers2()
+                fetchUsers()
             }
 
             shipmentButton.setOnClickListener {
@@ -72,6 +80,21 @@ class MainActivity : AppCompatActivity() {
             productButton.setOnClickListener {
                 showProductTable()
             }
+
+            writeOffProductsButton.setOnClickListener {
+                showWriteOffProducts()
+            }
+
+            productsCurrentQuantityButton.setOnClickListener {
+                showProductsCurrentQuantity()
+            }
+
+            extraditionButton.setOnClickListener {
+                showExtradition()
+            }
+
+
+
 
 
         }
@@ -95,8 +118,26 @@ class MainActivity : AppCompatActivity() {
         fetchProducts() // Ваша логика получения данных продуктов
     }
 
+    private fun showExtradition() {
+        // Обновляем заголовок таблицы и выводим данные продуктов
+        tableTitle.text = "Extradition"
+        fetchExtradition() // Ваша логика получения данных продуктов
+    }
 
-    private fun fetchUsers2() {
+    private fun showProductsCurrentQuantity() {
+        // Обновляем заголовок таблицы и выводим данные продуктов
+        tableTitle.text = "Products Current Quantity"
+        fetchProductsCurrentQuantity() // Ваша логика получения данных продуктов
+    }
+
+    private fun showWriteOffProducts() {
+        // Обновляем заголовок таблицы и выводим данные продуктов
+        tableTitle.text = "Write Off Products Table"
+        fetchWriteOffProducts() // Ваша логика получения данных продуктов
+    }
+
+
+    private fun fetchUsers() {
         val call = RetrofitClient.apiService.getUsers()
         call.enqueue(object : Callback<List<User>> {
             override fun onResponse(call: Call<List<User>>, response: Response<List<User>>) {
@@ -115,53 +156,6 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
-
-//    private fun fetchUsers() {
-//        RetrofitClient.apiService.getUsers().enqueue(object : Callback<List<User>> {
-//            override fun onResponse(call: Call<List<User>>, response: Response<List<User>>) {
-//                if (response.isSuccessful) {
-//                    val users = response.body() ?: listOf()
-//                    val tableLayout = findViewById<TableLayout>(R.id.tableLayout) // Найдите ваш TableLayout по ID
-//
-//                    // Очистите предыдущие строки (если необходимо)
-//                    tableLayout.removeViewsInLayout(1, tableLayout.childCount - 1)
-//
-//                    // Добавьте строки для каждого пользователя
-//                    for (user in users) {
-//                        val row = TableRow(this@MainActivity)
-//                        row.layoutParams = TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT)
-//
-//                        // Создайте TextView для каждой ячейки
-//                        val idTextView = TextView(this@MainActivity).apply { text = user.user_id.toString() }
-//                        val nameTextView = TextView(this@MainActivity).apply { text = user.user_name }
-//                        val loginTextView = TextView(this@MainActivity).apply { text = user.login }
-//                        val passwordTextView = TextView(this@MainActivity).apply { text = user.password }
-//                        val emailTextView = TextView(this@MainActivity).apply { text = user.email }
-//                        val phoneTextView = TextView(this@MainActivity).apply { text = user.phone_number }
-//                        val roleTextView = TextView(this@MainActivity).apply { text = user.role }
-//
-//                        // Добавьте TextView в строку
-//                        row.addView(idTextView)
-//                        row.addView(nameTextView)
-//                        row.addView(loginTextView)
-//                        row.addView(passwordTextView)
-//                        row.addView(emailTextView)
-//                        row.addView(phoneTextView)
-//                        row.addView(roleTextView)
-//
-//                        // Добавьте строку в TableLayout
-//                        tableLayout.addView(row)
-//                    }
-//                } else {
-//                    Log.e("MainActivity", "Error: ${response.code()}")
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<List<User>>, t: Throwable) {
-//                Log.e("MainActivity", "Failure: ${t.message}")
-//            }
-//        })
-//    }
 
     private fun fetchShipments() {
         val call = RetrofitClient.apiService.getShipments()
@@ -198,4 +192,67 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
+
+
+
+    private fun fetchExtradition() {
+        val call = RetrofitClient.apiService.getExtraditions() // Предположим, у вас есть эндпоинт для экстрадиции
+        call.enqueue(object : Callback<List<Extradition>> {
+            override fun onResponse(call: Call<List<Extradition>>, response: Response<List<Extradition>>) {
+                if (response.isSuccessful) {
+                    response.body()?.let { extraditions ->
+                        val tableAdapter = TableAdapter(this@MainActivity, tableLayout, extraditions)
+                        tableAdapter.populateTable("Extradition") // "Extradition" – это название для таблицы
+                    }
+                } else {
+                    Log.e("MainActivity", "Error: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<List<Extradition>>, t: Throwable) {
+                Log.e("MainActivity", "Failure: ${t.message}")
+            }
+        })
+    }
+
+    private fun fetchProductsCurrentQuantity() {
+        val call = RetrofitClient.apiService.getProductsCurrentQuantity() // Предположим, у вас есть эндпоинт для текущего количества продуктов
+        call.enqueue(object : Callback<List<ProductsCurrentQuantity>> {
+            override fun onResponse(call: Call<List<ProductsCurrentQuantity>>, response: Response<List<ProductsCurrentQuantity>>) {
+                if (response.isSuccessful) {
+                    response.body()?.let { productsCurrentQuantities ->
+                        val tableAdapter = TableAdapter(this@MainActivity, tableLayout, productsCurrentQuantities)
+                        tableAdapter.populateTable("ProductsCurrentQuantity") // Название для таблицы текущего количества продуктов
+                    }
+                } else {
+                    Log.e("MainActivity", "Error: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<List<ProductsCurrentQuantity>>, t: Throwable) {
+                Log.e("MainActivity", "Failure: ${t.message}")
+            }
+        })
+    }
+
+    private fun fetchWriteOffProducts() {
+        val call = RetrofitClient.apiService.getWriteOffProducts() // Предположим, у вас есть эндпоинт для списания продуктов
+        call.enqueue(object : Callback<List<WriteOffOfProducts>> {
+            override fun onResponse(call: Call<List<WriteOffOfProducts>>, response: Response<List<WriteOffOfProducts>>) {
+                if (response.isSuccessful) {
+                    response.body()?.let { writeOffProducts ->
+                        val tableAdapter = TableAdapter(this@MainActivity, tableLayout, writeOffProducts)
+                        tableAdapter.populateTable("WriteOffProducts") // Название для таблицы списания продуктов
+                    }
+                } else {
+                    Log.e("MainActivity", "Error: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<List<WriteOffOfProducts>>, t: Throwable) {
+                Log.e("MainActivity", "Failure: ${t.message}")
+            }
+        })
+    }
+
 }
