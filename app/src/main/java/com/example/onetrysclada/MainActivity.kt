@@ -220,6 +220,9 @@ class MainActivity : AppCompatActivity() {
         call.enqueue(object : Callback<List<ProductsCurrentQuantity>> {
             override fun onResponse(call: Call<List<ProductsCurrentQuantity>>, response: Response<List<ProductsCurrentQuantity>>) {
                 if (response.isSuccessful) {
+                    // Логируем ответ для проверки данных
+                    Log.d("MainActivity", "Response: ${response.body()}")
+
                     response.body()?.let { productsCurrentQuantities ->
                         val tableAdapter = TableAdapter(this@MainActivity, tableLayout, productsCurrentQuantities)
                         tableAdapter.populateTable("ProductsCurrentQuantity") // Название для таблицы текущего количества продуктов

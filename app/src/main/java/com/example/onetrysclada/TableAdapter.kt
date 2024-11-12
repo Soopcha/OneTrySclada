@@ -3,6 +3,7 @@ package com.example.onetrysclada
 import android.app.AlertDialog
 import android.content.Context
 import android.graphics.Color
+import android.util.Log
 // import android.telecom.Call
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -24,6 +25,7 @@ class TableAdapter<T>(
 ) {
 
     fun populateTable(dataType: String) {
+        //Log.d("TableAdapter", "Populating table with data: $data")
         // Очистка TableLayout перед заполнением
         tableLayout.removeAllViews()
 
@@ -66,6 +68,8 @@ class TableAdapter<T>(
                 headerRow.addView(createTextView("Product current quantity ID"))
                 headerRow.addView(createTextView("Quantity"))
                 headerRow.addView(createTextView("Product"))
+
+
             }
             "WriteOffProducts" -> {
                 headerRow.addView(createTextView("Product Write-off ID"))
@@ -76,6 +80,7 @@ class TableAdapter<T>(
             }
         }
         tableLayout.addView(headerRow)
+
 
         // Добавляем строки с данными для каждого элемента списка
         for (item in data) {
@@ -130,9 +135,21 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.user.toString()))
                 }
                 is ProductsCurrentQuantity -> {
+
+                    //Log.d("PopulateTable", "ProductCurrentQuantity Item: ${item.product_current_quantity_id}, Quantity: ${item.quantity}, Product: ${item.product}")
+
                     row.addView(createTextView(item.product_current_quantity_id.toString()))
                     row.addView(createTextView(item.quantity.toString()))
                     row.addView(createTextView(item.product.toString()))
+
+//                    // Логирование ошибок, если данные пустые или невалидные
+//                    if (item.product_current_quantity_id == null) {
+//                        Log.e("PopulateTable", "Product Current Quantity ID is null for item: $item")
+//                    }
+//                    if (item.product == null) {
+//                        Log.e("PopulateTable", "Product is null for item: $item")
+//                    }
+
                 }
             }
             tableLayout.addView(row)
@@ -144,6 +161,7 @@ class TableAdapter<T>(
             this.text = text
             setPadding(16, 16, 16, 16)
             setBackgroundColor(Color.LTGRAY) // Добавьте для отладки
+            setTextColor(Color.BLACK) // Устанавливаем черный цвет текста
             layoutParams = TableRow.LayoutParams(
                 0,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
