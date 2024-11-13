@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Поле для ввода количества отгрузки -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Количество" />
+
+    <EditText
+        android:id="@+id/edit_shipment_quantity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите количество"
+        android:inputType="number" />
+
+    <!-- Поле для ввода даты отгрузки -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Дата отгрузки" />
+
+    <EditText
+        android:id="@+id/edit_shipment_date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите дату отгрузки"
+        android:inputType="date" />
+
+    <!-- Поле для ввода ID пользователя -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ID пользователя" />
+
+    <EditText
+        android:id="@+id/edit_shipment_user"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите ID пользователя"
+        android:inputType="number" />
+
+</LinearLayout>

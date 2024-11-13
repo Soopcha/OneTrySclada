@@ -112,6 +112,9 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.quantity.toString()))
                     row.addView(createTextView(item.date_of_shipment))
                     row.addView(createTextView(item.user.toString()))
+
+                    val editButton = createEditButton("Edit") { openEditShipmentDialog(item) }
+                    row.addView(editButton)
                 //раньше было item.user.user_id и обращение уже к юзеру но что-то не работало так
                 }
                 is Product -> {
@@ -235,7 +238,61 @@ class TableAdapter<T>(
         })
     }
 
+    private fun createEditButton(text: String, onClick: () -> Unit): Button {
+        return Button(context).apply {
+            this.text = text
+            setOnClickListener { onClick() }
+            layoutParams = TableRow.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { marginStart = 16 }
+        }
+    }
 
+    private fun openEditShipmentDialog(shipment: Shipment) {
+        val dialog = AlertDialog.Builder(context)
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_shipment, null)
+        dialog.setView(dialogView)
 
+        val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_shipment_quantity)
+        val dateEditText = dialogView.findViewById<EditText>(R.id.edit_shipment_date)
+        val userEditText = dialogView.findViewById<EditText>(R.id.edit_shipment_user)
+
+        quantityEditText.setText(shipment.quantity.toString())
+        dateEditText.setText(shipment.date_of_shipment)
+        userEditText.setText(shipment.user.toString())
+
+        dialog.setPositiveButton("Save") { _, _ ->
+            val newQuantity = quantityEditText.text.toString().toInt()
+            val newDate = dateEditText.text.toString()
+            val newUser = userEditText.text.toString().toInt()
+
+            updateShipment(shipment.shipment_id, newQuantity, newDate, newUser)
+        }
+        dialog.setNegativeButton("Cancel", null)
+        dialog.create().show()
+    }
+
+    private fun updateShipment(shipmentId: Int, quantity: Int, date: String, userId: Int) {
+        val apiService = RetrofitClient.apiService
+        val updatedShipment = Shipment(shipmentId, quantity, date, userId)
+
+        apiService.updateShipment(shipmentId, updatedShipment).enqueue(object : Callback<Shipment> {
+            override fun onResponse(call: Call<Shipment>, response: Response<Shipment>) {
+                if (response.isSuccessful) {
+                    populateTable("Shipment")
+                } else {
+                    Toast.makeText(context, "Failed to update shipment", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<Shipment>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
 }
+
+
+
 

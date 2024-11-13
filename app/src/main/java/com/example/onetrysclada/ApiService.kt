@@ -31,6 +31,10 @@ interface ApiService {
     @PUT("api/users/{id}/")
     fun updateUser(@Path("id") userId: Int, @Body user: User): Call<User>
 
+    @PUT("api/shipments/{id}/")
+    fun updateShipment(@Path("id") shipmentId: Int, @Body shipment: Shipment): Call<Shipment>
+
+
 
     // Добавьте другие вызовы API по мере необходимости
 }
