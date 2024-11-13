@@ -127,6 +127,7 @@ class MainActivity : AppCompatActivity() {
     private fun showProductsCurrentQuantity() {
         // Обновляем заголовок таблицы и выводим данные продуктов
         tableTitle.text = "Products Current Quantity"
+        Log.d("MainActivity", "Products Current Quantity button clicked")
         fetchProductsCurrentQuantity() // Ваша логика получения данных продуктов
     }
 

@@ -25,7 +25,7 @@ class TableAdapter<T>(
 ) {
 
     fun populateTable(dataType: String) {
-        //Log.d("TableAdapter", "Populating table with data: $data")
+        Log.d("TableAdapter", "Populating table with data: $data")
         // Очистка TableLayout перед заполнением
         tableLayout.removeAllViews()
 
@@ -68,8 +68,6 @@ class TableAdapter<T>(
                 headerRow.addView(createTextView("Product current quantity ID"))
                 headerRow.addView(createTextView("Quantity"))
                 headerRow.addView(createTextView("Product"))
-
-
             }
             "WriteOffProducts" -> {
                 headerRow.addView(createTextView("Product Write-off ID"))
@@ -97,7 +95,14 @@ class TableAdapter<T>(
                     val editButton = Button(context).apply {
                         text = "Edit"
                         setOnClickListener {
-                            openEditDialog(item) // Call a function to open the edit dialog
+                            openEditDialog(item) // Функция открытия диалога
+                        }
+                        layoutParams = TableRow.LayoutParams(
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            // Устанавливаем выравнивание вправо
+                            marginStart = 16 // Дополнительное пространство слева от кнопки
                         }
                     }
                     row.addView(editButton)
@@ -163,9 +168,8 @@ class TableAdapter<T>(
             setBackgroundColor(Color.LTGRAY) // Добавьте для отладки
             setTextColor(Color.BLACK) // Устанавливаем черный цвет текста
             layoutParams = TableRow.LayoutParams(
-                0,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-                1f
+                ViewGroup.LayoutParams.WRAP_CONTENT
             )
         }
     }
