@@ -91,20 +91,20 @@
         android:id="@+id/edit_product_write_off"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Введите ID списания (если применимо)"
+        android:hint="Введите ID списания (если было)"
         android:inputType="number" />
 
     <!-- Поле для ID экстрадиции -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="ID экстрадиции" />
+        android:text="ID выдачи" />
 
     <EditText
         android:id="@+id/edit_product_extradition"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Введите ID экстрадиции (если применимо)"
+        android:hint="Введите ID выдачи (если была)"
         android:inputType="number" />
 
 </LinearLayout>

@@ -160,36 +160,31 @@ class TableAdapter<T>(
             tableLayout.addView(row)
         }
 
-        // Если отображаем таблицу пользователей, добавляем кнопку Add User после таблицы
+        // В зависимости от типа данных добавляем нужную кнопку
         if (dataType == "User") {
-            val addButton = Button(context).apply {
-                text = "Add User"
-                setOnClickListener { openAddUserDialog() }
-                layoutParams = TableRow.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    topMargin = 16
-                }
-            }
-            tableLayout.addView(addButton)
+            addButtonToTable("Add User") { openAddUserDialog() }
         }
 
-        // Кнопка для добавления продукта
         if (dataType == "Product") {
-            val addButton = Button(context).apply {
-                text = "Add Product"
-                setOnClickListener { openAddProductDialog() }
-                layoutParams = TableRow.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    topMargin = 16
-                }
-            }
-            tableLayout.addView(addButton)
+            addButtonToTable("Add Product") { openAddProductDialog() }
         }
 
+    }
+
+
+    // Функция для добавления кнопки с текстом и действием
+    fun addButtonToTable(buttonText: String, onClickAction: () -> Unit) {
+        val addButton = Button(context).apply {
+            text = buttonText
+            setOnClickListener { onClickAction() }
+            layoutParams = TableRow.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = 16
+            }
+        }
+        tableLayout.addView(addButton)
     }
 
     private fun createTextView(text: String): TextView {
@@ -509,7 +504,6 @@ class TableAdapter<T>(
         dialog.setNegativeButton("Cancel", null)
         dialog.create().show()
     }
-
 
 
     private fun addProduct(product: Product) {
