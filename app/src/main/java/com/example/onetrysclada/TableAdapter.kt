@@ -96,6 +96,9 @@ class TableAdapter<T>(
                     val editButton = createEditButton("Edit") { openEditDialog(item) }
                     row.addView(editButton)
 
+                    val deleteButton = createDeleteButton("Delete") { deleteUser(item.user_id) }
+                    row.addView(deleteButton)
+
 
                 }
                 is Shipment -> {
@@ -107,6 +110,11 @@ class TableAdapter<T>(
                     val editButton = createEditButton("Edit") { openEditShipmentDialog(item) }
                     row.addView(editButton)
                 //раньше было item.user.user_id и обращение уже к юзеру но что-то не работало так
+
+                    // Добавляем кнопку удаления
+                    val deleteButton = createDeleteButton("Delete") { deleteShipment(item.shipment_id) }
+                    row.addView(deleteButton)
+
                 }
                 is Product -> {
                     row.addView(createTextView(item.product_id.toString()))
@@ -160,13 +168,11 @@ class TableAdapter<T>(
             tableLayout.addView(row)
         }
 
-        // В зависимости от типа данных добавляем нужную кнопку
-        if (dataType == "User") {
-            addButtonToTable("Add User") { openAddUserDialog() }
-        }
-
-        if (dataType == "Product") {
-            addButtonToTable("Add Product") { openAddProductDialog() }
+        // Добавляем нужную кнопку в зависимости от типа данных
+        when (dataType) {
+            "User" -> addButtonToTable("Add User") { openAddUserDialog() }
+            "Product" -> addButtonToTable("Add Product") { openAddProductDialog() }
+            "Shipment" -> addButtonToTable("Add Shipment") { openAddShipmentDialog() }
         }
 
     }
@@ -423,6 +429,47 @@ class TableAdapter<T>(
         })
     }
 
+    private fun deleteShipment(shipmentId: Int) {
+        val apiService = RetrofitClient.apiService
+
+        apiService.deleteShipment(shipmentId).enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "Shipment deleted successfully", Toast.LENGTH_SHORT).show()
+                    populateTable("Shipment")  // Обновляем таблицу после удаления
+                } else {
+                    Toast.makeText(context, "Failed to delete shipment", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+
+    private fun deleteUser(userId: Int) {
+        val apiService = RetrofitClient.apiService
+
+        apiService.deleteUser(userId).enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "User deleted successfully", Toast.LENGTH_SHORT).show()
+                    populateTable("User")  // Обновляем таблицу после удаления
+                } else {
+                    Toast.makeText(context, "Failed to delete user", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+
+
 
     //ДОБАВЛЕНИЕ ПОШЛО
     private fun openAddUserDialog() {
@@ -525,6 +572,47 @@ class TableAdapter<T>(
     }
 
 
+    // Метод для открытия диалога добавления новой записи Shipment
+    private fun openAddShipmentDialog() {
+        val dialog = AlertDialog.Builder(context)
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_shipment, null)
+        dialog.setView(dialogView)
+
+        val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_shipment_quantity)
+        val dateEditText = dialogView.findViewById<EditText>(R.id.edit_shipment_date)
+        val userIdEditText = dialogView.findViewById<EditText>(R.id.edit_shipment_user_id)
+
+        dialog.setPositiveButton("Save") { _, _ ->
+            val newShipment = Shipment(
+                shipment_id = 0, // ID будет присвоен автоматически
+                quantity = quantityEditText.text.toString().toIntOrNull() ?: 0,
+                date_of_shipment = dateEditText.text.toString(),
+                user = userIdEditText.text.toString().toIntOrNull() ?: 0
+            )
+            addShipment(newShipment)
+        }
+        dialog.setNegativeButton("Cancel", null)
+        dialog.create().show()
+    }
+
+    // Метод для добавления новой записи Shipment через API
+    private fun addShipment(shipment: Shipment) {
+        val apiService = RetrofitClient.apiService
+        apiService.addShipment(shipment).enqueue(object : Callback<Shipment> {
+            override fun onResponse(call: Call<Shipment>, response: Response<Shipment>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "Shipment added successfully", Toast.LENGTH_SHORT).show()
+                    populateTable("Shipment") // Обновляем таблицу после добавления
+                } else {
+                    Toast.makeText(context, "Failed to add shipment", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<Shipment>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
 
 
 }
