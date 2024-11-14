@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Название продукта" />
+
+    <EditText
+        android:id="@+id/edit_product_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите название" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Дата истечения срока" />
+
+    <EditText
+        android:id="@+id/edit_product_expire_date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите дату" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Тип продукта" />
+
+    <EditText
+        android:id="@+id/edit_product_type"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите тип" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Производитель" />
+
+    <EditText
+        android:id="@+id/edit_product_manufacturer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите производителя" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Вес" />
+
+    <EditText
+        android:id="@+id/edit_product_weight"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите вес"
+        android:inputType="numberDecimal" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ID отгрузки" />
+
+    <EditText
+        android:id="@+id/edit_product_shipment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите ID отгрузки"
+        android:inputType="number" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ID списания" />
+
+    <EditText
+        android:id="@+id/edit_product_write_off"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите ID списания (если есть)"
+        android:inputType="number" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ID экстрадиции" />
+
+    <EditText
+        android:id="@+id/edit_product_extradition"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите ID экстрадиции (если есть)"
+        android:inputType="number" />
+</LinearLayout>

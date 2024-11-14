@@ -92,19 +92,8 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.email))
                     row.addView(createTextView(item.phone_number ?: ""))
                     row.addView(createTextView(item.role))
-                    val editButton = Button(context).apply {
-                        text = "Edit"
-                        setOnClickListener {
-                            openEditDialog(item) // Функция открытия диалога
-                        }
-                        layoutParams = TableRow.LayoutParams(
-                            ViewGroup.LayoutParams.WRAP_CONTENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT
-                        ).apply {
-                            // Устанавливаем выравнивание вправо
-                            marginStart = 16 // Дополнительное пространство слева от кнопки
-                        }
-                    }
+
+                    val editButton = createEditButton("Edit") { openEditDialog(item) }
                     row.addView(editButton)
                 }
                 is Shipment -> {
@@ -128,6 +117,12 @@ class TableAdapter<T>(
                     //раньше было item.shipment.shipment_id но что-то не работало так
                     row.addView(createTextView(item.write_off_of_products?.toString() ?: "N/A"))
                     row.addView(createTextView(item.extradition?.toString() ?: "N/A"))
+
+                    val editButton = createEditButton("Edit") { openEditProductDialog(item) }
+                    row.addView(editButton)
+
+                    val deleteButton = createDeleteButton("Delete") { deleteProduct(item.product_id) }
+                    row.addView(deleteButton)
                 }
                 is WriteOffOfProducts -> {
                     row.addView(createTextView(item.id_product_write_off.toString()))
@@ -177,6 +172,27 @@ class TableAdapter<T>(
         }
     }
 
+    private fun createEditButton(text: String, onClick: () -> Unit): Button {
+        return Button(context).apply {
+            this.text = text
+            setOnClickListener { onClick() }
+            layoutParams = TableRow.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { marginStart = 16 }
+        }
+    }
+
+    private fun createDeleteButton(text: String, onClick: () -> Unit): Button {
+        return Button(context).apply {
+            this.text = text
+            setOnClickListener { onClick() }
+            layoutParams = TableRow.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { marginStart = 16 }
+        }
+    }
 
     private fun openEditDialog(user: User) {
         val dialog = AlertDialog.Builder(context)
@@ -238,16 +254,8 @@ class TableAdapter<T>(
         })
     }
 
-    private fun createEditButton(text: String, onClick: () -> Unit): Button {
-        return Button(context).apply {
-            this.text = text
-            setOnClickListener { onClick() }
-            layoutParams = TableRow.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { marginStart = 16 }
-        }
-    }
+
+
 
     private fun openEditShipmentDialog(shipment: Shipment) {
         val dialog = AlertDialog.Builder(context)
@@ -291,6 +299,89 @@ class TableAdapter<T>(
             }
         })
     }
+
+
+    private fun openEditProductDialog(product: Product) {
+        val dialog = AlertDialog.Builder(context)
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_products, null)
+        dialog.setView(dialogView)
+
+        val nameEditText = dialogView.findViewById<EditText>(R.id.edit_product_name)
+        val expireDateEditText = dialogView.findViewById<EditText>(R.id.edit_product_expire_date)
+        val typeEditText = dialogView.findViewById<EditText>(R.id.edit_product_type)
+        val manufacturerEditText = dialogView.findViewById<EditText>(R.id.edit_product_manufacturer)
+        val weightEditText = dialogView.findViewById<EditText>(R.id.edit_product_weight)
+        val shipmentEditText = dialogView.findViewById<EditText>(R.id.edit_product_shipment)
+        val writeOffEditText = dialogView.findViewById<EditText>(R.id.edit_product_write_off)
+        val extraditionEditText = dialogView.findViewById<EditText>(R.id.edit_product_extradition)
+
+        nameEditText.setText(product.product_name)
+        expireDateEditText.setText(product.expire_date)
+        typeEditText.setText(product.product_type)
+        manufacturerEditText.setText(product.manufacturer)
+        weightEditText.setText(product.weight.toString())
+        shipmentEditText.setText(product.shipment.toString())
+        writeOffEditText.setText(product.write_off_of_products?.toString() ?: "")
+        extraditionEditText.setText(product.extradition?.toString() ?: "")
+
+        dialog.setPositiveButton("Save") { _, _ ->
+            val newName = nameEditText.text.toString()
+            val newExpireDate = expireDateEditText.text.toString()
+            val newType = typeEditText.text.toString()
+            val newManufacturer = manufacturerEditText.text.toString()
+            val newWeight = weightEditText.text.toString().toDoubleOrNull() ?: product.weight
+            val newShipment = shipmentEditText.text.toString().toIntOrNull() ?: product.shipment
+            val newWriteOff = writeOffEditText.text.toString().toIntOrNull()
+            val newExtradition = extraditionEditText.text.toString().toIntOrNull()
+
+            updateProduct(product.product_id, newName, newExpireDate, newType, newManufacturer, newWeight, newShipment, newWriteOff, newExtradition)
+        }
+        dialog.setNegativeButton("Cancel", null)
+        dialog.create().show()
+    }
+
+    private fun updateProduct(productId: Int, name: String, expireDate: String, type: String, manufacturer: String, weight: Double, shipment: Int, writeOff: Int?, extradition: Int?) {
+        val apiService = RetrofitClient.apiService
+        val updatedProduct = Product(productId, name, expireDate, type, manufacturer, weight, shipment, writeOff, extradition)
+
+        apiService.updateProduct(productId, updatedProduct).enqueue(object : Callback<Product> {
+            override fun onResponse(call: Call<Product>, response: Response<Product>) {
+                if (response.isSuccessful) {
+                    populateTable("Product")
+                } else {
+                    Toast.makeText(context, "Failed to update product", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<Product>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+
+// УДАЛЕНИЕ пошло
+    private fun deleteProduct(productId: Int) {
+        val apiService = RetrofitClient.apiService
+
+        apiService.deleteProduct(productId).enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "Product deleted successfully", Toast.LENGTH_SHORT).show()
+                    populateTable("Product")  // Обновляем таблицу после удаления
+                } else {
+                    Toast.makeText(context, "Failed to delete product", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+
+
 }
 
 

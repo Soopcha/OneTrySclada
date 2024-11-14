@@ -13,27 +13,11 @@
         android:background="#FFFFFF"
         android:padding="16dp">
 
-        <!-- Header with marquee scrolling text -->
-        <TextView
-            android:id="@+id/header_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Maize: 12000 tonnes, Rice: 2345 tonnes, etc."
-            android:textColor="@android:color/black"
-            android:textSize="16sp"
-            android:singleLine="true"
-            android:ellipsize="marquee"
-            android:marqueeRepeatLimit="marquee_forever"
-            android:focusableInTouchMode="true"
-            android:scrollHorizontally="true"
-            android:focusable="true" />
-
         <!-- Company Logo -->
         <ImageView
             android:id="@+id/logo"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:layout_below="@id/header_text"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="200dp"
             android:src="@drawable/logo" />
