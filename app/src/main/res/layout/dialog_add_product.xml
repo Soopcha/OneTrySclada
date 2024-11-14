@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Поле для названия продукта -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Название продукта" />
+
+    <EditText
+        android:id="@+id/edit_product_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите название" />
+
+    <!-- Поле для даты истечения срока -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Дата истечения срока" />
+
+    <EditText
+        android:id="@+id/edit_product_expire_date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите дату (YYYY-MM-DD)"
+        android:inputType="date" />
+
+    <!-- Поле для типа продукта -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Тип продукта" />
+
+    <EditText
+        android:id="@+id/edit_product_type"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите тип продукта" />
+
+    <!-- Поле для производителя -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Производитель" />
+
+    <EditText
+        android:id="@+id/edit_product_manufacturer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите производителя" />
+
+    <!-- Поле для веса -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Вес" />
+
+    <EditText
+        android:id="@+id/edit_product_weight"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите вес"
+        android:inputType="numberDecimal" />
+
+    <!-- Поле для ID отгрузки -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ID отгрузки" />
+
+    <EditText
+        android:id="@+id/edit_product_shipment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите ID отгрузки"
+        android:inputType="number" />
+
+    <!-- Поле для списания продукта -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ID списания" />
+
+    <EditText
+        android:id="@+id/edit_product_write_off"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите ID списания (если применимо)"
+        android:inputType="number" />
+
+    <!-- Поле для ID экстрадиции -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ID экстрадиции" />
+
+    <EditText
+        android:id="@+id/edit_product_extradition"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите ID экстрадиции (если применимо)"
+        android:inputType="number" />
+
+</LinearLayout>

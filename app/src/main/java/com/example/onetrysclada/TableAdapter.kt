@@ -95,6 +95,8 @@ class TableAdapter<T>(
 
                     val editButton = createEditButton("Edit") { openEditDialog(item) }
                     row.addView(editButton)
+
+
                 }
                 is Shipment -> {
                     row.addView(createTextView(item.shipment_id.toString()))
@@ -157,6 +159,37 @@ class TableAdapter<T>(
             }
             tableLayout.addView(row)
         }
+
+        // Если отображаем таблицу пользователей, добавляем кнопку Add User после таблицы
+        if (dataType == "User") {
+            val addButton = Button(context).apply {
+                text = "Add User"
+                setOnClickListener { openAddUserDialog() }
+                layoutParams = TableRow.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = 16
+                }
+            }
+            tableLayout.addView(addButton)
+        }
+
+        // Кнопка для добавления продукта
+        if (dataType == "Product") {
+            val addButton = Button(context).apply {
+                text = "Add Product"
+                setOnClickListener { openAddProductDialog() }
+                layoutParams = TableRow.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = 16
+                }
+            }
+            tableLayout.addView(addButton)
+        }
+
     }
 
     private fun createTextView(text: String): TextView {
@@ -193,6 +226,21 @@ class TableAdapter<T>(
             ).apply { marginStart = 16 }
         }
     }
+
+    private fun createAddButton(text: String, onClick: () -> Unit): Button {
+        return Button(context).apply {
+            this.text = text
+            setOnClickListener { onClick() }
+            layoutParams = TableRow.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginStart = 16
+                topMargin = 16
+            }
+        }
+    }
+
 
     private fun openEditDialog(user: User) {
         val dialog = AlertDialog.Builder(context)
@@ -379,6 +427,109 @@ class TableAdapter<T>(
             }
         })
     }
+
+
+    //ДОБАВЛЕНИЕ ПОШЛО
+    private fun openAddUserDialog() {
+        val dialog = AlertDialog.Builder(context)
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_user, null)
+        dialog.setView(dialogView)
+
+        val nameEditText = dialogView.findViewById<EditText>(R.id.edit_user_name)
+        val loginEditText = dialogView.findViewById<EditText>(R.id.edit_user_login)
+        val emailEditText = dialogView.findViewById<EditText>(R.id.edit_user_email)
+        val passwordEditText = dialogView.findViewById<EditText>(R.id.edit_user_password)
+        val phoneNumberEditText = dialogView.findViewById<EditText>(R.id.edit_user_phone_number)
+        val roleEditText = dialogView.findViewById<EditText>(R.id.edit_user_role)
+
+        dialog.setPositiveButton("Save") { _, _ ->
+            val newUser = User(
+                user_id = 0,  // ID будет присвоен автоматически
+                user_name = nameEditText.text.toString(),
+                login = loginEditText.text.toString(),
+                email = emailEditText.text.toString(),
+                password = passwordEditText.text.toString(),
+                phone_number = phoneNumberEditText.text.toString(),
+                role = roleEditText.text.toString()
+            )
+            addUser(newUser)
+        }
+
+        dialog.setNegativeButton("Cancel", null)
+        dialog.create().show()
+    }
+
+
+    private fun addUser(user: User) {
+        val apiService = RetrofitClient.apiService
+        apiService.addUser(user).enqueue(object : Callback<User> {
+            override fun onResponse(call: Call<User>, response: Response<User>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "User added successfully", Toast.LENGTH_SHORT).show()
+                    populateTable("User")  // Обновляем таблицу после добавления
+                } else {
+                    Toast.makeText(context, "Failed to add user", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<User>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun openAddProductDialog() {
+        val dialog = AlertDialog.Builder(context)
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_product, null)
+        dialog.setView(dialogView)
+
+        val nameEditText = dialogView.findViewById<EditText>(R.id.edit_product_name)
+        val expireDateEditText = dialogView.findViewById<EditText>(R.id.edit_product_expire_date)
+        val typeEditText = dialogView.findViewById<EditText>(R.id.edit_product_type)
+        val manufacturerEditText = dialogView.findViewById<EditText>(R.id.edit_product_manufacturer)
+        val weightEditText = dialogView.findViewById<EditText>(R.id.edit_product_weight)
+        val shipmentEditText = dialogView.findViewById<EditText>(R.id.edit_product_shipment)
+        val writeOffEditText = dialogView.findViewById<EditText>(R.id.edit_product_write_off)
+        val extraditionEditText = dialogView.findViewById<EditText>(R.id.edit_product_extradition)
+
+        dialog.setPositiveButton("Save") { _, _ ->
+            val newProduct = Product(
+                product_id = 0,
+                product_name = nameEditText.text.toString(),
+                expire_date = expireDateEditText.text.toString(),
+                product_type = typeEditText.text.toString(),
+                manufacturer = manufacturerEditText.text.toString(),
+                weight = weightEditText.text.toString().toDoubleOrNull() ?: 0.0,
+                shipment = shipmentEditText.text.toString().toIntOrNull() ?: 0,
+                write_off_of_products = writeOffEditText.text.toString().toIntOrNull(),
+                extradition = extraditionEditText.text.toString().toIntOrNull()
+            )
+            addProduct(newProduct)
+        }
+        dialog.setNegativeButton("Cancel", null)
+        dialog.create().show()
+    }
+
+
+
+    private fun addProduct(product: Product) {
+        val apiService = RetrofitClient.apiService
+        apiService.addProduct(product).enqueue(object : Callback<Product> {
+            override fun onResponse(call: Call<Product>, response: Response<Product>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "Product added successfully", Toast.LENGTH_SHORT).show()
+                    populateTable("Product")  // Обновляем таблицу после добавления
+                } else {
+                    Toast.makeText(context, "Failed to add product", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<Product>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
 
 
 
