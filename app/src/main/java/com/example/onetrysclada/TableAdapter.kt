@@ -140,12 +140,26 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.quantity.toString()))
                     row.addView(createTextView(item.reason))
                     row.addView(createTextView(item.user.toString()))
+
+                    val editButton = createEditButton("Edit") { openEditWriteOffProductsDialog(item) }
+                    row.addView(editButton)
+
+                    // Кнопка удаления для WriteOffOfProducts
+                    val deleteButton = createDeleteButton("Delete") { deleteWriteOffOfProducts(item.id_product_write_off) }
+                    row.addView(deleteButton)
                 }
                 is Extradition -> {
                     row.addView(createTextView(item.extradition_id.toString()))
                     row.addView(createTextView(item.date_of_extradition))
                     row.addView(createTextView(item.quantity.toString()))
                     row.addView(createTextView(item.user.toString()))
+
+                    val editButton = createEditButton("Edit") { openEditExtraditionDialog(item) }
+                    row.addView(editButton)
+
+                    // Кнопка удаления для Extradition
+                    val deleteButton = createDeleteButton("Delete") { deleteExtradition(item.extradition_id) }
+                    row.addView(deleteButton)
                 }
                 is ProductsCurrentQuantity -> {
 
@@ -154,6 +168,14 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.product_current_quantity_id.toString()))
                     row.addView(createTextView(item.quantity.toString()))
                     row.addView(createTextView(item.product.toString()))
+
+                    // Кнопка редактирования
+                    val editButton = createEditButton("Edit") { openEditProductsCurrentQuantityDialog(item) }
+                    row.addView(editButton)
+
+                    // Кнопка удаления для ProductsCurrentQuantity
+                    val deleteButton = createDeleteButton("Delete") { deleteProductsCurrentQuantity(item.product_current_quantity_id) }
+                    row.addView(deleteButton)
 
 //                    // Логирование ошибок, если данные пустые или невалидные
 //                    if (item.product_current_quantity_id == null) {
@@ -173,6 +195,10 @@ class TableAdapter<T>(
             "User" -> addButtonToTable("Add User") { openAddUserDialog() }
             "Product" -> addButtonToTable("Add Product") { openAddProductDialog() }
             "Shipment" -> addButtonToTable("Add Shipment") { openAddShipmentDialog() }
+            "WriteOffProducts" -> addButtonToTable("Add WriteOffProduct") { openAddWriteOffProductsDialog() }
+            "ProductsCurrentQuantity" -> addButtonToTable("Add ProductsCurrentQuantity") { openAddProductsCurrentQuantityDialog() }
+            "Extradition" -> addButtonToTable("Add Extradition") { openAddExtraditionDialog() }
+
         }
 
     }
@@ -409,7 +435,154 @@ class TableAdapter<T>(
     }
 
 
-// УДАЛЕНИЕ пошло
+    private fun openEditWriteOffProductsDialog(writeOffProduct: WriteOffOfProducts) {
+        val dialog = AlertDialog.Builder(context)
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_write_off_products, null)
+        dialog.setView(dialogView)
+
+        val dateEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_date)
+        val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_quantity)
+        val reasonEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_reason)
+        val userEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_user)
+
+        // Заполнение текущих значений
+        dateEditText.setText(writeOffProduct.product_write_off_date)
+        quantityEditText.setText(writeOffProduct.quantity.toString())
+        reasonEditText.setText(writeOffProduct.reason)
+        userEditText.setText(writeOffProduct.user.toString())
+
+        dialog.setPositiveButton("Save") { _, _ ->
+            val updatedWriteOffProduct = WriteOffOfProducts(
+                id_product_write_off = writeOffProduct.id_product_write_off,
+                product_write_off_date = dateEditText.text.toString(),
+                quantity = quantityEditText.text.toString().toIntOrNull() ?: 0,
+                reason = reasonEditText.text.toString(),
+                user = userEditText.text.toString().toIntOrNull() ?: writeOffProduct.user
+            )
+            updateWriteOffProducts(updatedWriteOffProduct)
+        }
+
+        dialog.setNegativeButton("Cancel", null)
+        dialog.create().show()
+    }
+    private fun updateWriteOffProducts(writeOffProduct: WriteOffOfProducts) {
+        val apiService = RetrofitClient.apiService
+        apiService.updateWriteOffProduct(writeOffProduct.id_product_write_off, writeOffProduct)
+            .enqueue(object : Callback<WriteOffOfProducts> {
+                override fun onResponse(
+                    call: Call<WriteOffOfProducts>,
+                    response: Response<WriteOffOfProducts>
+                ) {
+                    if (response.isSuccessful) {
+                        Toast.makeText(context, "WriteOffProduct updated successfully", Toast.LENGTH_SHORT).show()
+                        populateTable("WriteOffProducts")
+                    } else {
+                        Toast.makeText(context, "Failed to update WriteOffProduct", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<WriteOffOfProducts>, t: Throwable) {
+                    Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
+
+    private fun openEditExtraditionDialog(extradition: Extradition) {
+        val dialog = AlertDialog.Builder(context)
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_extradition, null)
+        dialog.setView(dialogView)
+
+        val dateEditText = dialogView.findViewById<EditText>(R.id.edit_extradition_date)
+        val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_extradition_quantity)
+        val userEditText = dialogView.findViewById<EditText>(R.id.edit_extradition_user)
+
+        // Заполнение текущих значений
+        dateEditText.setText(extradition.date_of_extradition)
+        quantityEditText.setText(extradition.quantity.toString())
+        userEditText.setText(extradition.user.toString())
+
+        dialog.setPositiveButton("Save") { _, _ ->
+            val updatedExtradition = Extradition(
+                extradition_id = extradition.extradition_id,
+                date_of_extradition = dateEditText.text.toString(),
+                quantity = quantityEditText.text.toString().toIntOrNull() ?: extradition.quantity,
+                user = userEditText.text.toString().toIntOrNull() ?: extradition.user
+            )
+            updateExtradition(updatedExtradition)
+        }
+
+        dialog.setNegativeButton("Cancel", null)
+        dialog.create().show()
+    }
+
+
+    private fun updateExtradition(extradition: Extradition) {
+        val apiService = RetrofitClient.apiService
+        apiService.updateExtradition(extradition.extradition_id, extradition)
+            .enqueue(object : Callback<Extradition> {
+                override fun onResponse(call: Call<Extradition>, response: Response<Extradition>) {
+                    if (response.isSuccessful) {
+                        Toast.makeText(context, "Extradition updated successfully", Toast.LENGTH_SHORT).show()
+                        populateTable("Extradition")
+                    } else {
+                        Toast.makeText(context, "Failed to update Extradition", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<Extradition>, t: Throwable) {
+                    Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
+
+    private fun openEditProductsCurrentQuantityDialog(item: ProductsCurrentQuantity) {
+        val dialog = AlertDialog.Builder(context)
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_products_current_quantity, null)
+        dialog.setView(dialogView)
+
+        val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_products_current_quantity)
+        val productEditText = dialogView.findViewById<EditText>(R.id.edit_products_current_quantity_product)
+
+        // Заполнение текущих данных
+        quantityEditText.setText(item.quantity.toString())
+        productEditText.setText(item.product.toString())
+
+        dialog.setPositiveButton("Save") { _, _ ->
+            val newQuantity = quantityEditText.text.toString().toIntOrNull() ?: item.quantity
+            val newProduct = productEditText.text.toString().toIntOrNull() ?: item.product
+
+            // Вызов API для обновления
+            updateProductsCurrentQuantity(item.product_current_quantity_id, newQuantity, newProduct)
+        }
+
+        dialog.setNegativeButton("Cancel", null)
+        dialog.create().show()
+    }
+
+    private fun updateProductsCurrentQuantity(id: Int, quantity: Int, product: Int) {
+        val apiService = RetrofitClient.apiService
+        val updatedItem = ProductsCurrentQuantity(product_current_quantity_id = id, quantity = quantity, product = product)
+
+        apiService.updateProductsCurrentQuantity(id, updatedItem).enqueue(object : Callback<ProductsCurrentQuantity> {
+            override fun onResponse(call: Call<ProductsCurrentQuantity>, response: Response<ProductsCurrentQuantity>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "Updated successfully", Toast.LENGTH_SHORT).show()
+                    populateTable("ProductsCurrentQuantity") // Обновляем таблицу
+                } else {
+                    Toast.makeText(context, "Failed to update", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<ProductsCurrentQuantity>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+
+
+
+    // УДАЛЕНИЕ пошло
     private fun deleteProduct(productId: Int) {
         val apiService = RetrofitClient.apiService
 
@@ -467,6 +640,65 @@ class TableAdapter<T>(
             }
         })
     }
+
+
+    private fun deleteWriteOffOfProducts(writeOffId: Int) {
+        val apiService = RetrofitClient.apiService
+
+        apiService.deleteWriteOffOfProducts(writeOffId).enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "Write-Off deleted successfully", Toast.LENGTH_SHORT).show()
+                    populateTable("WriteOffProducts")  // Обновляем таблицу после удаления
+                } else {
+                    Toast.makeText(context, "Failed to delete Write-Off", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun deleteExtradition(extraditionId: Int) {
+        val apiService = RetrofitClient.apiService
+
+        apiService.deleteExtradition(extraditionId).enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "Extradition deleted successfully", Toast.LENGTH_SHORT).show()
+                    populateTable("Extradition")  // Обновляем таблицу после удаления
+                } else {
+                    Toast.makeText(context, "Failed to delete Extradition", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun deleteProductsCurrentQuantity(productsCurrentQuantityId: Int) {
+        val apiService = RetrofitClient.apiService
+
+        apiService.deleteProductsCurrentQuantity(productsCurrentQuantityId).enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "Current Quantity deleted successfully", Toast.LENGTH_SHORT).show()
+                    populateTable("ProductsCurrentQuantity")  // Обновляем таблицу после удаления
+                } else {
+                    Toast.makeText(context, "Failed to delete Current Quantity", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
 
 
 
@@ -614,6 +846,128 @@ class TableAdapter<T>(
         })
     }
 
+
+    private fun openAddWriteOffProductsDialog() {
+        val dialog = AlertDialog.Builder(context)
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_write_off_products, null)
+        dialog.setView(dialogView)
+
+        val dateEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_date)
+        val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_quantity)
+        val reasonEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_reason)
+        val userEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_user)
+
+        dialog.setPositiveButton("Save") { _, _ ->
+            val newWriteOffProduct = WriteOffOfProducts(
+                id_product_write_off = 0,
+                product_write_off_date = dateEditText.text.toString(),
+                quantity = quantityEditText.text.toString().toIntOrNull() ?: 0,
+                reason = reasonEditText.text.toString(),
+                user = userEditText.text.toString().toIntOrNull() ?: 0
+            )
+            addWriteOffProduct(newWriteOffProduct)
+        }
+
+        dialog.setNegativeButton("Cancel", null)
+        dialog.create().show()
+    }
+
+    private fun addWriteOffProduct(writeOffProduct: WriteOffOfProducts) {
+        val apiService = RetrofitClient.apiService
+        apiService.addWriteOffProduct(writeOffProduct).enqueue(object : Callback<WriteOffOfProducts> {
+            override fun onResponse(call: Call<WriteOffOfProducts>, response: Response<WriteOffOfProducts>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "WriteOffProduct added successfully", Toast.LENGTH_SHORT).show()
+                    populateTable("WriteOffProducts")  // Обновляем таблицу
+                } else {
+                    Toast.makeText(context, "Failed to add WriteOffProduct", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<WriteOffOfProducts>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun openAddProductsCurrentQuantityDialog() {
+        val dialog = AlertDialog.Builder(context)
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_products_current_quantity, null)
+        dialog.setView(dialogView)
+
+        val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_products_current_quantity_quantity)
+        val productEditText = dialogView.findViewById<EditText>(R.id.edit_products_current_quantity_product)
+
+        dialog.setPositiveButton("Save") { _, _ ->
+            val newProductsCurrentQuantity = ProductsCurrentQuantity(
+                product_current_quantity_id = 0,
+                quantity = quantityEditText.text.toString().toIntOrNull() ?: 0,
+                product = productEditText.text.toString().toIntOrNull() ?: 0
+            )
+            addProductsCurrentQuantity(newProductsCurrentQuantity)
+        }
+
+        dialog.setNegativeButton("Cancel", null)
+        dialog.create().show()
+    }
+
+    private fun addProductsCurrentQuantity(productsCurrentQuantity: ProductsCurrentQuantity) {
+        val apiService = RetrofitClient.apiService
+        apiService.addProductsCurrentQuantity(productsCurrentQuantity).enqueue(object : Callback<ProductsCurrentQuantity> {
+            override fun onResponse(call: Call<ProductsCurrentQuantity>, response: Response<ProductsCurrentQuantity>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "ProductsCurrentQuantity added successfully", Toast.LENGTH_SHORT).show()
+                    populateTable("ProductsCurrentQuantity")  // Обновляем таблицу
+                } else {
+                    Toast.makeText(context, "Failed to add ProductsCurrentQuantity", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<ProductsCurrentQuantity>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+    private fun openAddExtraditionDialog() {
+        val dialog = AlertDialog.Builder(context)
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_extradition, null)
+        dialog.setView(dialogView)
+
+        val dateEditText = dialogView.findViewById<EditText>(R.id.edit_extradition_date)
+        val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_extradition_quantity)
+        val userEditText = dialogView.findViewById<EditText>(R.id.edit_extradition_user)
+
+        dialog.setPositiveButton("Save") { _, _ ->
+            val newExtradition = Extradition(
+                extradition_id = 0,
+                date_of_extradition = dateEditText.text.toString(),
+                quantity = quantityEditText.text.toString().toIntOrNull() ?: 0,
+                user = userEditText.text.toString().toIntOrNull() ?: 0
+            )
+            addExtradition(newExtradition)
+        }
+
+        dialog.setNegativeButton("Cancel", null)
+        dialog.create().show()
+    }
+
+    private fun addExtradition(extradition: Extradition) {
+        val apiService = RetrofitClient.apiService
+        apiService.addExtradition(extradition).enqueue(object : Callback<Extradition> {
+            override fun onResponse(call: Call<Extradition>, response: Response<Extradition>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "Extradition added successfully", Toast.LENGTH_SHORT).show()
+                    populateTable("Extradition")  // Обновляем таблицу
+                } else {
+                    Toast.makeText(context, "Failed to add Extradition", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<Extradition>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
 
 }
 

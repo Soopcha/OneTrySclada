@@ -95,6 +95,6 @@ interface ApiService {
     fun deleteProductsCurrentQuantity(@Path("id") id: Int): Call<Void>
 
     @DELETE("api/write-off-products/{id}/")
-    fun deleteWriteOffProduct(@Path("id") writeOffId: Int): Call<Void>
+    fun deleteWriteOffOfProducts(@Path("id") writeOffId: Int): Call<Void>
 
 }

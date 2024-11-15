@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Дата списания" />
+
+    <EditText
+        android:id="@+id/edit_write_off_date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите дату (YYYY-MM-DD)"
+        android:inputType="date" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Количество" />
+
+    <EditText
+        android:id="@+id/edit_write_off_quantity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите количество"
+        android:inputType="number" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Причина" />
+
+    <EditText
+        android:id="@+id/edit_write_off_reason"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите причину списания" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ID пользователя" />
+
+    <EditText
+        android:id="@+id/edit_write_off_user"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите ID пользователя"
+        android:inputType="number" />
+
+</LinearLayout>
