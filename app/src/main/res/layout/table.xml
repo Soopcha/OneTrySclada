@@ -13,7 +13,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="16dp"
+        android:backgroundTint="#9D4545"/>
 
     <Button
         android:id="@+id/shipment_button"
@@ -23,7 +24,8 @@
         app:layout_constraintTop_toBottomOf="@id/user_button"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="16dp"
+        android:backgroundTint="#9D4545"/>
 
     <Button
         android:id="@+id/product_button"
@@ -33,7 +35,8 @@
         app:layout_constraintTop_toBottomOf="@id/shipment_button"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="16dp"
+        android:backgroundTint="#9D4545"/>
 
     <Button
         android:id="@+id/write_off_products_button"
@@ -43,7 +46,8 @@
         app:layout_constraintTop_toBottomOf="@id/product_button"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="16dp"
+        android:backgroundTint="#9D4545"/>
 
     <Button
         android:id="@+id/products_current_quantity_button"
@@ -53,7 +57,8 @@
         app:layout_constraintTop_toBottomOf="@id/write_off_products_button"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="16dp"
+        android:backgroundTint="#9D4545"/>
 
     <Button
         android:id="@+id/extradition_button"
@@ -63,7 +68,8 @@
         app:layout_constraintTop_toBottomOf="@id/products_current_quantity_button"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="16dp"
+        android:backgroundTint="#9D4545"/>
 
     <TextView
         android:id="@+id/table_title"

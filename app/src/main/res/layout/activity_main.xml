@@ -82,7 +82,7 @@
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
                     android:text="Forgot password?"
-                    android:textColor="@android:color/holo_blue_dark"
+                    android:textColor="#9D4545"
                     app:layout_constraintLeft_toRightOf="@id/remember_me"
                     android:layout_marginBottom="0dp"/>
             </LinearLayout>
@@ -93,7 +93,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Login"
-                android:backgroundTint="@android:color/holo_green_dark"
+                android:backgroundTint="#9D4545"
                 android:textColor="@android:color/white"
                 android:layout_marginTop="16dp" />
         </LinearLayout>
@@ -104,7 +104,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Subscribe"
-            android:backgroundTint="@android:color/holo_green_light"
+            android:backgroundTint="#9D4545"
             android:textColor="@android:color/white"
             android:layout_alignParentEnd="true"
             android:layout_alignParentTop="true"
