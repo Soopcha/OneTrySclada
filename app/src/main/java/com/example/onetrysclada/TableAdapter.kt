@@ -3,17 +3,25 @@ package com.example.onetrysclada
 import android.app.AlertDialog
 import android.content.Context
 import android.graphics.Color
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 // import android.telecom.Call
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.view.WindowInsetsAnimation
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TableLayout
 import android.widget.TableRow
 import android.widget.TextView
 import android.widget.Toast
+import com.example.onetrysclada.data.models.Extradition
+import com.example.onetrysclada.data.models.Product
+import com.example.onetrysclada.data.models.ProductsCurrentQuantity
+import com.example.onetrysclada.data.models.Shipment
+import com.example.onetrysclada.data.models.User
+import com.example.onetrysclada.data.models.WriteOffOfProducts
+import com.example.onetrysclada.data.network.RetrofitClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -609,7 +617,11 @@ class TableAdapter<T>(
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "Shipment deleted successfully", Toast.LENGTH_SHORT).show()
-                    populateTable("Shipment")  // Обновляем таблицу после удаления
+
+                    // Добавляем задержку перед вызовом populateTable
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        populateTable("Shipment")  // Обновляем таблицу после удаления
+                    }, 1000)  // Задержка в 500 миллисекунд
                 } else {
                     Toast.makeText(context, "Failed to delete shipment", Toast.LENGTH_SHORT).show()
                 }
