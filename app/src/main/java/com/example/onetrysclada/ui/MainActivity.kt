@@ -1,4 +1,4 @@
-package com.example.onetrysclada
+package com.example.onetrysclada.ui
 
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
@@ -9,6 +9,15 @@ import android.util.Log
 import android.widget.Button
 import android.widget.TableLayout
 import android.widget.TextView
+import com.example.onetrysclada.data.models.Extradition
+import com.example.onetrysclada.data.models.Product
+import com.example.onetrysclada.data.models.ProductsCurrentQuantity
+import com.example.onetrysclada.R
+import com.example.onetrysclada.data.models.Shipment
+import com.example.onetrysclada.TableAdapter
+import com.example.onetrysclada.data.models.User
+import com.example.onetrysclada.data.models.WriteOffOfProducts
+import com.example.onetrysclada.data.network.RetrofitClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response

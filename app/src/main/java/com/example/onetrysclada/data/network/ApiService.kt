@@ -1,5 +1,11 @@
-package com.example.onetrysclada
+package com.example.onetrysclada.data.network
 
+import com.example.onetrysclada.data.models.Extradition
+import com.example.onetrysclada.data.models.Product
+import com.example.onetrysclada.data.models.ProductsCurrentQuantity
+import com.example.onetrysclada.data.models.Shipment
+import com.example.onetrysclada.data.models.User
+import com.example.onetrysclada.data.models.WriteOffOfProducts
 import retrofit2.http.GET
 import retrofit2.Call
 import retrofit2.http.Body

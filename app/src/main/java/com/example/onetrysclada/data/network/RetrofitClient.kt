@@ -1,4 +1,4 @@
-package com.example.onetrysclada
+package com.example.onetrysclada.data.network
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
