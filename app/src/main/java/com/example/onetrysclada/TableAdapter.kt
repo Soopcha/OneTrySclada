@@ -3,8 +3,6 @@ package com.example.onetrysclada
 import android.app.AlertDialog
 import android.content.Context
 import android.graphics.Color
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 // import android.telecom.Call
 import android.view.LayoutInflater
@@ -32,8 +30,12 @@ class TableAdapter<T>(
     private val data: List<T>
 ) {
 
-    fun populateTable(dataType: String) {
-        Log.d("TableAdapter", "Populating table with data: $data")
+    fun populateTable(dataType: String, updatedData: List<T> = data) {
+        // Используем переданный список данных или старый, если новый не указан
+        val dataToUse = if (updatedData.isNotEmpty()) updatedData else data
+
+
+        Log.d("TableAdapter", "Populating table with data: $dataToUse")
         // Очистка TableLayout перед заполнением
         tableLayout.removeAllViews()
 
@@ -89,7 +91,7 @@ class TableAdapter<T>(
 
 
         // Добавляем строки с данными для каждого элемента списка
-        for (item in data) {
+        for (item in dataToUse) {
             val row = TableRow(context)
             when (item) {
                 is User -> {
@@ -101,7 +103,7 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.phone_number ?: ""))
                     row.addView(createTextView(item.role))
 
-                    val editButton = createEditButton("Edit") { openEditDialog(item) }
+                    val editButton = createEditButton("Edit") { openEditUserDialog(item) }
                     row.addView(editButton)
 
                     val deleteButton = createDeleteButton("Delete") { deleteUser(item.user_id) }
@@ -262,22 +264,81 @@ class TableAdapter<T>(
         }
     }
 
-    private fun createAddButton(text: String, onClick: () -> Unit): Button {
-        return Button(context).apply {
-            this.text = text
-            setOnClickListener { onClick() }
-            layoutParams = TableRow.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                marginStart = 16
-                topMargin = 16
+    private fun fetchProductsAndUpdateTable() {
+        val apiService = RetrofitClient.apiService
+
+        apiService.getProducts().enqueue(object : Callback<List<Product>> {
+            override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
+                if (response.isSuccessful) {
+                    val products = response.body() ?: emptyList()
+                    populateTableForProducts(products) // Обновляем таблицу с новыми данными
+                } else {
+                    Toast.makeText(context, "Failed to fetch products", Toast.LENGTH_SHORT).show()
+                }
             }
-        }
+
+            override fun onFailure(call: Call<List<Product>>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    fun populateTableForProducts(data: List<Product>) {
+        populateTable("Product", data as List<T>)
     }
 
 
-    private fun openEditDialog(user: User) {
+    // Функция для запроса данных Shipment и обновления таблицы
+    private fun fetchShipmentsAndUpdateTable() {
+        val apiService = RetrofitClient.apiService
+
+        apiService.getShipments().enqueue(object : Callback<List<Shipment>> {
+            override fun onResponse(call: Call<List<Shipment>>, response: Response<List<Shipment>>) {
+                if (response.isSuccessful) {
+                    val shipments = response.body() ?: emptyList()
+                    populateTableForShipments(shipments) // Обновляем таблицу с новыми данными
+                } else {
+                    Toast.makeText(context, "Failed to fetch shipments", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<List<Shipment>>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    // Функция для обновления таблицы Shipment
+    fun populateTableForShipments(data: List<Shipment>) {
+        populateTable("Shipment", data as List<T>)
+    }
+
+    private fun fetchUsersAndUpdateTable() {
+        val apiService = RetrofitClient.apiService
+
+        apiService.getUsers().enqueue(object : Callback<List<User>> {
+            override fun onResponse(call: Call<List<User>>, response: Response<List<User>>) {
+                if (response.isSuccessful) {
+                    val users = response.body() ?: emptyList()
+                    populateTableForUsers(users) // Обновляем таблицу
+                } else {
+                    Toast.makeText(context, "Failed to fetch users", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<List<User>>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    fun populateTableForUsers(data: List<User>) {
+        populateTable("User", data as List<T>)
+    }
+
+
+
+    private fun openEditUserDialog(user: User) {
         val dialog = AlertDialog.Builder(context)
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_user, null)
         dialog.setView(dialogView)
@@ -317,7 +378,6 @@ class TableAdapter<T>(
 
         val apiService = RetrofitClient.apiService
 
-        //val call = apiService.updateUser(user_id, User(user_id, user_name, email, login,password, phone_number,role))
         val updatedUser = User(user_id = user_id, user_name = user_name, email = email, login = login, password = password, phone_number = phone_number, role = role)
 
         val call = apiService.updateUser(user_id, updatedUser)
@@ -325,7 +385,8 @@ class TableAdapter<T>(
         call.enqueue(object : Callback<User> {
             override fun onResponse(call: Call<User>, response: Response<User>) {
                 if (response.isSuccessful) {
-                    populateTable("User")
+                    Toast.makeText(context, "User updated successfully", Toast.LENGTH_SHORT).show()
+                    fetchUsersAndUpdateTable() // Обновляем таблицу
                 } else {
                     Toast.makeText(context, "Failed to update user", Toast.LENGTH_SHORT).show()
                 }
@@ -371,7 +432,9 @@ class TableAdapter<T>(
         apiService.updateShipment(shipmentId, updatedShipment).enqueue(object : Callback<Shipment> {
             override fun onResponse(call: Call<Shipment>, response: Response<Shipment>) {
                 if (response.isSuccessful) {
-                    populateTable("Shipment")
+                    Toast.makeText(context, "Shipment updated successfully", Toast.LENGTH_SHORT).show()
+                    // Обновляем таблицу с новыми данными
+                    fetchShipmentsAndUpdateTable()
                 } else {
                     Toast.makeText(context, "Failed to update shipment", Toast.LENGTH_SHORT).show()
                 }
@@ -430,7 +493,8 @@ class TableAdapter<T>(
         apiService.updateProduct(productId, updatedProduct).enqueue(object : Callback<Product> {
             override fun onResponse(call: Call<Product>, response: Response<Product>) {
                 if (response.isSuccessful) {
-                    populateTable("Product")
+                    Toast.makeText(context, "Product updated successfully", Toast.LENGTH_SHORT).show()
+                    fetchProductsAndUpdateTable()
                 } else {
                     Toast.makeText(context, "Failed to update product", Toast.LENGTH_SHORT).show()
                 }
@@ -598,7 +662,9 @@ class TableAdapter<T>(
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "Product deleted successfully", Toast.LENGTH_SHORT).show()
-                    populateTable("Product")  // Обновляем таблицу после удаления
+                    //populateTable("Product")  // Обновляем таблицу после удаления
+                    // Выполнить новый запрос данных
+                    fetchProductsAndUpdateTable()
                 } else {
                     Toast.makeText(context, "Failed to delete product", Toast.LENGTH_SHORT).show()
                 }
@@ -610,6 +676,7 @@ class TableAdapter<T>(
         })
     }
 
+
     private fun deleteShipment(shipmentId: Int) {
         val apiService = RetrofitClient.apiService
 
@@ -618,10 +685,9 @@ class TableAdapter<T>(
                 if (response.isSuccessful) {
                     Toast.makeText(context, "Shipment deleted successfully", Toast.LENGTH_SHORT).show()
 
-                    // Добавляем задержку перед вызовом populateTable
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        populateTable("Shipment")  // Обновляем таблицу после удаления
-                    }, 1000)  // Задержка в 500 миллисекунд
+                    // Выполнить новый запрос данных для обновления таблицы
+                    fetchShipmentsAndUpdateTable()
+
                 } else {
                     Toast.makeText(context, "Failed to delete shipment", Toast.LENGTH_SHORT).show()
                 }
@@ -634,6 +700,7 @@ class TableAdapter<T>(
     }
 
 
+
     private fun deleteUser(userId: Int) {
         val apiService = RetrofitClient.apiService
 
@@ -641,7 +708,7 @@ class TableAdapter<T>(
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "User deleted successfully", Toast.LENGTH_SHORT).show()
-                    populateTable("User")  // Обновляем таблицу после удаления
+                    fetchUsersAndUpdateTable() // Обновляем таблицу после успешного удаления
                 } else {
                     Toast.makeText(context, "Failed to delete user", Toast.LENGTH_SHORT).show()
                 }
@@ -752,7 +819,7 @@ class TableAdapter<T>(
             override fun onResponse(call: Call<User>, response: Response<User>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "User added successfully", Toast.LENGTH_SHORT).show()
-                    populateTable("User")  // Обновляем таблицу после добавления
+                    fetchUsersAndUpdateTable() // Обновляем таблицу после добавления
                 } else {
                     Toast.makeText(context, "Failed to add user", Toast.LENGTH_SHORT).show()
                 }
@@ -803,7 +870,7 @@ class TableAdapter<T>(
             override fun onResponse(call: Call<Product>, response: Response<Product>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "Product added successfully", Toast.LENGTH_SHORT).show()
-                    populateTable("Product")  // Обновляем таблицу после добавления
+                    fetchProductsAndUpdateTable()  // Обновляем таблицу после добавления
                 } else {
                     Toast.makeText(context, "Failed to add product", Toast.LENGTH_SHORT).show()
                 }
@@ -846,7 +913,8 @@ class TableAdapter<T>(
             override fun onResponse(call: Call<Shipment>, response: Response<Shipment>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "Shipment added successfully", Toast.LENGTH_SHORT).show()
-                    populateTable("Shipment") // Обновляем таблицу после добавления
+                    // Обновляем таблицу с новыми данными
+                    fetchShipmentsAndUpdateTable()
                 } else {
                     Toast.makeText(context, "Failed to add shipment", Toast.LENGTH_SHORT).show()
                 }
@@ -929,7 +997,7 @@ class TableAdapter<T>(
             override fun onResponse(call: Call<ProductsCurrentQuantity>, response: Response<ProductsCurrentQuantity>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "ProductsCurrentQuantity added successfully", Toast.LENGTH_SHORT).show()
-                    populateTable("ProductsCurrentQuantity")  // Обновляем таблицу
+                    fetchProductsAndUpdateTable()
                 } else {
                     Toast.makeText(context, "Failed to add ProductsCurrentQuantity", Toast.LENGTH_SHORT).show()
                 }
