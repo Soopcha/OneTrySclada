@@ -287,6 +287,53 @@ class TableAdapter<T>(
         populateTable("Product", data as List<T>)
     }
 
+    private fun fetchProductsCurrentQuantityAndUpdateTable() {
+        val apiService = RetrofitClient.apiService
+
+        apiService.getProductsCurrentQuantity().enqueue(object : Callback<List<ProductsCurrentQuantity>> {
+            override fun onResponse(call: Call<List<ProductsCurrentQuantity>>, response: Response<List<ProductsCurrentQuantity>>) {
+                if (response.isSuccessful) {
+                    val items = response.body() ?: emptyList()
+                    populateTableForProductsCurrentQuantity(items) // Обновляем таблицу с новыми данными
+                } else {
+                    Toast.makeText(context, "Failed to fetch data", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<List<ProductsCurrentQuantity>>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    fun populateTableForProductsCurrentQuantity(data: List<ProductsCurrentQuantity>) {
+        populateTable("ProductsCurrentQuantity", data as List<T>)
+    }
+
+    private fun fetchWriteOffProductsAndUpdateTable() {
+        val apiService = RetrofitClient.apiService
+        apiService.getWriteOffProducts().enqueue(object : Callback<List<WriteOffOfProducts>> {
+            override fun onResponse(
+                call: Call<List<WriteOffOfProducts>>,
+                response: Response<List<WriteOffOfProducts>>
+            ) {
+                if (response.isSuccessful) {
+                    val writeOffProducts = response.body() ?: emptyList()
+                    populateTableForWriteOffProducts(writeOffProducts) // Обновляем таблицу с новыми данными
+                } else {
+                    Toast.makeText(context, "Failed to fetch WriteOffProducts", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<List<WriteOffOfProducts>>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    fun populateTableForWriteOffProducts(data: List<WriteOffOfProducts>) {
+        populateTable("WriteOffProducts", data as List<T>)
+    }
 
     // Функция для запроса данных Shipment и обновления таблицы
     private fun fetchShipmentsAndUpdateTable() {
@@ -334,6 +381,30 @@ class TableAdapter<T>(
 
     fun populateTableForUsers(data: List<User>) {
         populateTable("User", data as List<T>)
+    }
+
+
+    private fun fetchExtraditionsAndUpdateTable() {
+        val apiService = RetrofitClient.apiService
+
+        apiService.getExtraditions().enqueue(object : Callback<List<Extradition>> {
+            override fun onResponse(call: Call<List<Extradition>>, response: Response<List<Extradition>>) {
+                if (response.isSuccessful) {
+                    val extraditions = response.body() ?: emptyList()
+                    populateTableForExtraditions(extraditions) // Обновляем таблицу с новыми данными
+                } else {
+                    Toast.makeText(context, "Failed to fetch data", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<List<Extradition>>, t: Throwable) {
+                Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    fun populateTableForExtraditions(data: List<Extradition>) {
+        populateTable("Extradition", data as List<T>)
     }
 
 
@@ -547,7 +618,7 @@ class TableAdapter<T>(
                 ) {
                     if (response.isSuccessful) {
                         Toast.makeText(context, "WriteOffProduct updated successfully", Toast.LENGTH_SHORT).show()
-                        populateTable("WriteOffProducts")
+                        fetchWriteOffProductsAndUpdateTable()
                     } else {
                         Toast.makeText(context, "Failed to update WriteOffProduct", Toast.LENGTH_SHORT).show()
                     }
@@ -595,7 +666,7 @@ class TableAdapter<T>(
                 override fun onResponse(call: Call<Extradition>, response: Response<Extradition>) {
                     if (response.isSuccessful) {
                         Toast.makeText(context, "Extradition updated successfully", Toast.LENGTH_SHORT).show()
-                        populateTable("Extradition")
+                        fetchExtraditionsAndUpdateTable()
                     } else {
                         Toast.makeText(context, "Failed to update Extradition", Toast.LENGTH_SHORT).show()
                     }
@@ -639,7 +710,7 @@ class TableAdapter<T>(
             override fun onResponse(call: Call<ProductsCurrentQuantity>, response: Response<ProductsCurrentQuantity>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "Updated successfully", Toast.LENGTH_SHORT).show()
-                    populateTable("ProductsCurrentQuantity") // Обновляем таблицу
+                    fetchProductsCurrentQuantityAndUpdateTable()
                 } else {
                     Toast.makeText(context, "Failed to update", Toast.LENGTH_SHORT).show()
                 }
@@ -728,7 +799,7 @@ class TableAdapter<T>(
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "Write-Off deleted successfully", Toast.LENGTH_SHORT).show()
-                    populateTable("WriteOffProducts")  // Обновляем таблицу после удаления
+                    fetchWriteOffProductsAndUpdateTable()  // Обновляем таблицу после удаления
                 } else {
                     Toast.makeText(context, "Failed to delete Write-Off", Toast.LENGTH_SHORT).show()
                 }
@@ -747,7 +818,7 @@ class TableAdapter<T>(
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "Extradition deleted successfully", Toast.LENGTH_SHORT).show()
-                    populateTable("Extradition")  // Обновляем таблицу после удаления
+                    fetchExtraditionsAndUpdateTable()  // Обновляем таблицу после удаления
                 } else {
                     Toast.makeText(context, "Failed to delete Extradition", Toast.LENGTH_SHORT).show()
                 }
@@ -766,7 +837,7 @@ class TableAdapter<T>(
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "Current Quantity deleted successfully", Toast.LENGTH_SHORT).show()
-                    populateTable("ProductsCurrentQuantity")  // Обновляем таблицу после удаления
+                    fetchProductsCurrentQuantityAndUpdateTable()  // Обновляем таблицу после удаления
                 } else {
                     Toast.makeText(context, "Failed to delete Current Quantity", Toast.LENGTH_SHORT).show()
                 }
@@ -958,7 +1029,7 @@ class TableAdapter<T>(
             override fun onResponse(call: Call<WriteOffOfProducts>, response: Response<WriteOffOfProducts>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "WriteOffProduct added successfully", Toast.LENGTH_SHORT).show()
-                    populateTable("WriteOffProducts")  // Обновляем таблицу
+                    fetchWriteOffProductsAndUpdateTable()
                 } else {
                     Toast.makeText(context, "Failed to add WriteOffProduct", Toast.LENGTH_SHORT).show()
                 }
@@ -997,7 +1068,7 @@ class TableAdapter<T>(
             override fun onResponse(call: Call<ProductsCurrentQuantity>, response: Response<ProductsCurrentQuantity>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "ProductsCurrentQuantity added successfully", Toast.LENGTH_SHORT).show()
-                    fetchProductsAndUpdateTable()
+                    fetchProductsCurrentQuantityAndUpdateTable()
                 } else {
                     Toast.makeText(context, "Failed to add ProductsCurrentQuantity", Toast.LENGTH_SHORT).show()
                 }
@@ -1037,7 +1108,7 @@ class TableAdapter<T>(
             override fun onResponse(call: Call<Extradition>, response: Response<Extradition>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "Extradition added successfully", Toast.LENGTH_SHORT).show()
-                    populateTable("Extradition")  // Обновляем таблицу
+                    fetchExtraditionsAndUpdateTable()
                 } else {
                     Toast.makeText(context, "Failed to add Extradition", Toast.LENGTH_SHORT).show()
                 }

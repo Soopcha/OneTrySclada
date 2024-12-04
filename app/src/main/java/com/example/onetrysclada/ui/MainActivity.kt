@@ -73,12 +73,6 @@ class MainActivity : AppCompatActivity() {
 
             // Установите слушатели на кнопки
             userButton.setOnClickListener {
-                //showUserTable()
-
-                // Инициализация TableLayout
-                //tableLayout = findViewById(R.id.tableLayout)
-
-                // Загружаем данные
                 fetchUsers()
             }
 
