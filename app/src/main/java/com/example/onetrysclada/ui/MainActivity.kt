@@ -45,6 +45,12 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var tableLayout: TableLayout
     private var users: MutableList<User> = mutableListOf()
+    private var shipments: MutableList<Shipment> = mutableListOf()
+    private var products: MutableList<Product> = mutableListOf()
+    private var writeOffProducts: MutableList<WriteOffOfProducts> = mutableListOf()
+    private var productsCurrentQuantities: MutableList<ProductsCurrentQuantity> = mutableListOf()
+    private var extraditions: MutableList<Extradition> = mutableListOf()
+
 
     private lateinit var sortFieldSpinner: Spinner
     private lateinit var sortOrderSpinner: Spinner
@@ -80,26 +86,33 @@ class MainActivity : AppCompatActivity() {
 
             // Установите слушатели на кнопки
             userButton.setOnClickListener {
+                tableTitle.text = "User Table"
+                updateSortFieldSpinner(listOf("ID", "Name", "Email", "Login"))
                 fetchUsers()
             }
 
             shipmentButton.setOnClickListener {
+                updateSortFieldSpinner(listOf("ID", "Date", "User"))
                 showShipmentTable()
             }
 
             productButton.setOnClickListener {
+                updateSortFieldSpinner(listOf("ID", "Name", "Shipment", "Manufacturer"))
                 showProductTable()
             }
 
             writeOffProductsButton.setOnClickListener {
+                updateSortFieldSpinner(listOf("ID", "User", "Quantity", "Date"))
                 showWriteOffProducts()
             }
 
             productsCurrentQuantityButton.setOnClickListener {
+                updateSortFieldSpinner(listOf("ID", "Product Name", "Available Quantity"))
                 showProductsCurrentQuantity()
             }
 
             extraditionButton.setOnClickListener {
+                updateSortFieldSpinner(listOf("ID", "User", "Date", "Quantity"))
                 showExtradition()
             }
 
@@ -142,27 +155,92 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateSortFieldSpinner(fields: List<String>) {
+        val fieldAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, fields)
+        fieldAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        sortFieldSpinner.adapter = fieldAdapter
+    }
 
     private fun updateSorting() {
         val selectedField = sortFieldSpinner.selectedItem.toString()
         val selectedOrder = sortOrderSpinner.selectedItem.toString()
 
-        // Пример: сортируем список пользователей
-        when (selectedField) {
-            "ID" -> users.sortBy { it.user_id }
-            "Name" -> users.sortBy { it.user_name }
-            "Email" -> users.sortBy { it.email }
-            "Login" -> users.sortBy { it.login }
-        }
+        when (tableTitle.text) {
+            "User Table" -> {
+                when (selectedField) {
+                    "ID" -> users.sortBy { it.user_id }
+                    "Name" -> users.sortBy { it.user_name }
+                    "Email" -> users.sortBy { it.email }
+                    "Login" -> users.sortBy { it.login }
+                }
+                if (selectedOrder == "Descending") users.reverse()
+                val tableAdapter = TableAdapter(this, tableLayout, users)
+                tableAdapter.populateTable("User")
+                Log.d("MainActivity", "you are here: ${tableTitle.text}")
+            }
 
-        if (selectedOrder == "Descending") {
-            users.reverse()
-        }
+            "Shipment Table" -> {
+                when (selectedField) {
+                    "ID" -> shipments.sortBy { it.shipment_id }
+                    "Date" -> shipments.sortBy { it.date_of_shipment }
+                    "Destination" -> shipments.sortBy { it.user }
+                }
+                if (selectedOrder == "Descending") shipments.reverse()
+                val tableAdapter = TableAdapter(this, tableLayout, shipments)
+                tableAdapter.populateTable("Shipment")
+            }
 
-        // Обновите таблицу
-        val tableAdapter = TableAdapter(this, tableLayout, users)
-        tableAdapter.populateTable("User")
+            "Product Table" -> {
+                when (selectedField) {
+                    "ID" -> products.sortBy { it.product_id }
+                    "Name" -> products.sortBy { it.product_name }
+                    "Category" -> products.sortBy { it.shipment }
+                    "Price" -> products.sortBy { it.manufacturer }
+                }
+                if (selectedOrder == "Descending") products.reverse()
+                val tableAdapter = TableAdapter(this, tableLayout, products)
+                tableAdapter.populateTable("Product")
+            }
+
+            "Write Off Products Table" -> {
+                when (selectedField) {
+                    "ID" -> writeOffProducts.sortBy { it.id_product_write_off }
+                    "Product Name" -> writeOffProducts.sortBy { it.user }
+                    "Quantity" -> writeOffProducts.sortBy { it.quantity }
+                    "Date" -> writeOffProducts.sortBy { it.product_write_off_date }
+                }
+                if (selectedOrder == "Descending") writeOffProducts.reverse()
+                val tableAdapter = TableAdapter(this, tableLayout, writeOffProducts)
+                tableAdapter.populateTable("WriteOffProducts")
+            }
+
+            "Products Current Quantity" -> {
+                when (selectedField) {
+                    "ID" -> productsCurrentQuantities.sortBy { it.product_current_quantity_id }
+                    "Product Name" -> productsCurrentQuantities.sortBy { it.product }
+                    "Available Quantity" -> productsCurrentQuantities.sortBy { it.quantity }
+                }
+                if (selectedOrder == "Descending") productsCurrentQuantities.reverse()
+                val tableAdapter = TableAdapter(this, tableLayout, productsCurrentQuantities)
+                tableAdapter.populateTable("ProductsCurrentQuantity")
+            }
+
+            "Extradition" -> {
+                when (selectedField) {
+                    "ID" -> extraditions.sortBy { it.extradition_id }
+                    "Recipient" -> extraditions.sortBy { it.user }
+                    "Date" -> extraditions.sortBy { it.date_of_extradition }
+                    "Quantity" -> extraditions.sortBy { it.quantity }
+                }
+                if (selectedOrder == "Descending") extraditions.reverse()
+                val tableAdapter = TableAdapter(this, tableLayout, extraditions)
+                tableAdapter.populateTable("Extradition")
+            }
+        }
     }
+
+
+
 //    private fun showUserTable() {
 //        // Обновляем заголовок таблицы и выводим данные пользователей
 //        tableTitle.text = "User Table"
@@ -226,10 +304,11 @@ class MainActivity : AppCompatActivity() {
         call.enqueue(object : Callback<List<Shipment>> {
             override fun onResponse(call: Call<List<Shipment>>, response: Response<List<Shipment>>) {
                 if (response.isSuccessful) {
-                    response.body()?.let { shipments ->
-                        val tableAdapter = TableAdapter(this@MainActivity, tableLayout, shipments)
-                        tableAdapter.populateTable("Shipment")
-                    }
+                    shipments.clear() // Очистите список перед добавлением новых данных
+                    response.body()?.let { shipments.addAll(it) }
+
+                    val tableAdapter = TableAdapter(this@MainActivity, tableLayout, shipments)
+                    tableAdapter.populateTable("Shipment")
                 }
             }
 
@@ -244,10 +323,13 @@ class MainActivity : AppCompatActivity() {
         call.enqueue(object : Callback<List<Product>> {
             override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
                 if (response.isSuccessful) {
-                    response.body()?.let { products ->
-                        val tableAdapter = TableAdapter(this@MainActivity, tableLayout, products)
-                        tableAdapter.populateTable("Product")
-                    }
+                    products.clear() // Очистите список перед добавлением новых данных
+                    response.body()?.let { products.addAll(it) }
+
+                    val tableAdapter = TableAdapter(this@MainActivity, tableLayout, products)
+                    tableAdapter.populateTable("Product")
+                } else {
+                    Log.e("MainActivity", "Error: ${response.code()}")
                 }
             }
 
@@ -264,10 +346,11 @@ class MainActivity : AppCompatActivity() {
         call.enqueue(object : Callback<List<Extradition>> {
             override fun onResponse(call: Call<List<Extradition>>, response: Response<List<Extradition>>) {
                 if (response.isSuccessful) {
-                    response.body()?.let { extraditions ->
-                        val tableAdapter = TableAdapter(this@MainActivity, tableLayout, extraditions)
-                        tableAdapter.populateTable("Extradition") // "Extradition" – это название для таблицы
-                    }
+                    extraditions.clear()
+                    response.body()?.let { extraditions.addAll(it) }
+
+                    val tableAdapter = TableAdapter(this@MainActivity, tableLayout, extraditions)
+                    tableAdapter.populateTable("Extradition")
                 } else {
                     Log.e("MainActivity", "Error: ${response.code()}")
                 }
@@ -284,13 +367,11 @@ class MainActivity : AppCompatActivity() {
         call.enqueue(object : Callback<List<ProductsCurrentQuantity>> {
             override fun onResponse(call: Call<List<ProductsCurrentQuantity>>, response: Response<List<ProductsCurrentQuantity>>) {
                 if (response.isSuccessful) {
-                    // Логируем ответ для проверки данных
-                    Log.d("MainActivity", "Response: ${response.body()}")
+                    productsCurrentQuantities.clear()
+                    response.body()?.let { productsCurrentQuantities.addAll(it) }
 
-                    response.body()?.let { productsCurrentQuantities ->
-                        val tableAdapter = TableAdapter(this@MainActivity, tableLayout, productsCurrentQuantities)
-                        tableAdapter.populateTable("ProductsCurrentQuantity") // Название для таблицы текущего количества продуктов
-                    }
+                    val tableAdapter = TableAdapter(this@MainActivity, tableLayout, productsCurrentQuantities)
+                    tableAdapter.populateTable("ProductsCurrentQuantity")
                 } else {
                     Log.e("MainActivity", "Error: ${response.code()}")
                 }
@@ -307,10 +388,11 @@ class MainActivity : AppCompatActivity() {
         call.enqueue(object : Callback<List<WriteOffOfProducts>> {
             override fun onResponse(call: Call<List<WriteOffOfProducts>>, response: Response<List<WriteOffOfProducts>>) {
                 if (response.isSuccessful) {
-                    response.body()?.let { writeOffProducts ->
-                        val tableAdapter = TableAdapter(this@MainActivity, tableLayout, writeOffProducts)
-                        tableAdapter.populateTable("WriteOffProducts") // Название для таблицы списания продуктов
-                    }
+                    writeOffProducts.clear()
+                    response.body()?.let { writeOffProducts.addAll(it) }
+
+                    val tableAdapter = TableAdapter(this@MainActivity, tableLayout, writeOffProducts)
+                    tableAdapter.populateTable("WriteOffProducts")
                 } else {
                     Log.e("MainActivity", "Error: ${response.code()}")
                 }
