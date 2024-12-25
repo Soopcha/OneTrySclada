@@ -6,7 +6,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import android.util.Log
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.Spinner
 import android.widget.TableLayout
 import android.widget.TextView
 import com.example.onetrysclada.data.models.Extradition
@@ -41,6 +45,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var tableLayout: TableLayout
     private var users: MutableList<User> = mutableListOf()
+
+    private lateinit var sortFieldSpinner: Spinner
+    private lateinit var sortOrderSpinner: Spinner
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,12 +104,65 @@ class MainActivity : AppCompatActivity() {
             }
 
 
+            // Инициализируйте Spinner
+            sortFieldSpinner = findViewById(R.id.sortFieldSpinner)
+            sortOrderSpinner = findViewById(R.id.sortOrderSpinner)
+
+            // Заполните Spinner данными
+            val sortFields = listOf("ID", "Name", "Email", "Login") // Замените на поля из вашего API
+            val sortOrders = listOf("Ascending", "Descending")
+
+            val fieldAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, sortFields)
+            fieldAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            sortFieldSpinner.adapter = fieldAdapter
+
+            val orderAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, sortOrders)
+            orderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            sortOrderSpinner.adapter = orderAdapter
+
+            // Установите слушатели изменений Spinner
+            sortFieldSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                    updateSorting()
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>) {}
+            }
+
+            sortOrderSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                    updateSorting()
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>) {}
+            }
 
 
 
         }
     }
 
+
+    private fun updateSorting() {
+        val selectedField = sortFieldSpinner.selectedItem.toString()
+        val selectedOrder = sortOrderSpinner.selectedItem.toString()
+
+        // Пример: сортируем список пользователей
+        when (selectedField) {
+            "ID" -> users.sortBy { it.user_id }
+            "Name" -> users.sortBy { it.user_name }
+            "Email" -> users.sortBy { it.email }
+            "Login" -> users.sortBy { it.login }
+        }
+
+        if (selectedOrder == "Descending") {
+            users.reverse()
+        }
+
+        // Обновите таблицу
+        val tableAdapter = TableAdapter(this, tableLayout, users)
+        tableAdapter.populateTable("User")
+    }
 //    private fun showUserTable() {
 //        // Обновляем заголовок таблицы и выводим данные пользователей
 //        tableTitle.text = "User Table"
