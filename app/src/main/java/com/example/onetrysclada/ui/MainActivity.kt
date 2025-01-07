@@ -1,6 +1,8 @@
 package com.example.onetrysclada.ui
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -10,6 +12,7 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.EditText
 import android.widget.Spinner
 import android.widget.TableLayout
 import android.widget.TextView
@@ -55,6 +58,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var sortFieldSpinner: Spinner
     private lateinit var sortOrderSpinner: Spinner
 
+    private lateinit var searchEditText: EditText
+    private lateinit var filterRoleSpinner: Spinner
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -73,6 +79,9 @@ class MainActivity : AppCompatActivity() {
             // Меняем лейаут на table.xml
             setContentView(R.layout.table)
 
+            // Инициализация tableLayout после setContentView
+            tableLayout = findViewById(R.id.tableLayout) // Ensure this is initialized
+
             // Найдите кнопки и TextView по ID
             userButton = findViewById(R.id.user_button)
             shipmentButton = findViewById(R.id.shipment_button)
@@ -82,7 +91,28 @@ class MainActivity : AppCompatActivity() {
             extraditionButton = findViewById(R.id.extradition_button)
             tableTitle = findViewById(R.id.table_title)
 
-            tableLayout = findViewById(R.id.tableLayout) // Убедитесь, что TableLayout инициализирован
+            // Инициализация Spinners
+            sortFieldSpinner = findViewById(R.id.sortFieldSpinner)
+            sortOrderSpinner = findViewById(R.id.sortOrderSpinner)
+
+            // Инициализация фильтра по роли
+            filterRoleSpinner = findViewById(R.id.filterRoleSpinner)
+            val roles = listOf("all", "admin", "user")
+            val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, roles)
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            filterRoleSpinner.adapter = adapter
+
+            // Слушатель для Spinner фильтрации ролей
+            filterRoleSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                    val selectedRole = roles[position]
+                    val filters = if (selectedRole == "All") emptyMap() else mapOf("role" to selectedRole)
+                    fetchUsers(filters = filters)
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>) {}
+            }
+
 
             // Установите слушатели на кнопки
             userButton.setOnClickListener {
@@ -279,8 +309,8 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun fetchUsers() {
-        val call = RetrofitClient.apiService.getUsers()
+    private fun fetchUsers(search: String? = null, ordering: String? = null, filters: Map<String, String> = emptyMap()) {
+        val call = RetrofitClient.apiService.getUsersFiltered(search, ordering, filters)
         call.enqueue(object : Callback<List<User>> {
             override fun onResponse(call: Call<List<User>>, response: Response<List<User>>) {
                 if (response.isSuccessful) {
@@ -290,14 +320,19 @@ class MainActivity : AppCompatActivity() {
                     // Создаём адаптер и заполняем таблицу
                     val tableAdapter = TableAdapter(this@MainActivity, tableLayout, users)
                     tableAdapter.populateTable("User")
+                } else {
+                    Log.e("MainActivity", "Error: ${response.code()} - ${response.message()}")
                 }
             }
 
             override fun onFailure(call: Call<List<User>>, t: Throwable) {
-                // Обработка ошибки
+                Log.e("MainActivity", "Failure: ${t.message}")
             }
         })
     }
+
+
+
 
     private fun fetchShipments() {
         val call = RetrofitClient.apiService.getShipments()
@@ -403,5 +438,28 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
+
+//    private fun fetchUsersWithFilter(field: String?, order: String?, query: String?) {
+//        val call = RetrofitClient.apiService.getUsersFiltered(field, order, field)
+//        call.enqueue(object : Callback<List<User>> {
+//            override fun onResponse(call: Call<List<User>>, response: Response<List<User>>) {
+//                if (response.isSuccessful) {
+//                    users.clear()
+//                    response.body()?.let { users.addAll(it) }
+//                    val tableAdapter = TableAdapter(this@MainActivity, tableLayout, users)
+//                    tableAdapter.populateTable("User")
+//                }
+//            }
+//
+//            override fun onFailure(call: Call<List<User>>, t: Throwable) {
+//                Log.e("MainActivity", "Error: ${t.message}")
+//            }
+//        })
+//
+//
+//    }
+
+
+
 
 }

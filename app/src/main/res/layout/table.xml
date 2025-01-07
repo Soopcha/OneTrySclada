@@ -99,7 +99,29 @@
             android:padding="8dp" />
     </LinearLayout>
 
+    <!-- Spinner для фильтрации по ролям -->
+    <Spinner
+        android:id="@+id/filterRoleSpinner"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:padding="8dp"
+        app:layout_constraintTop_toBottomOf="@id/sorting_controls"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="8dp" />
 
+    <!-- Поле для поиска -->
+    <EditText
+        android:id="@+id/searchEditText"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:hint="Search..."
+        android:inputType="text"
+        android:padding="8dp"
+        android:layout_margin="8dp"
+        app:layout_constraintTop_toBottomOf="@id/filterRoleSpinner"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 <!--    &lt;!&ndash; Заголовок таблицы &ndash;&gt;-->
     <TextView
@@ -107,7 +129,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="This is the Table Layout"
-        app:layout_constraintTop_toBottomOf="@id/sorting_controls"
+        app:layout_constraintTop_toBottomOf="@id/searchEditText"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_margin="16dp" />
 

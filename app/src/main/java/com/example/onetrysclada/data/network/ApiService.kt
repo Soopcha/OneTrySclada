@@ -13,6 +13,8 @@ import retrofit2.http.DELETE
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
+import retrofit2.http.QueryMap
 
 
 interface ApiService {
@@ -21,6 +23,13 @@ interface ApiService {
 
     @GET("api/users/") // Убедитесь, что путь соответствует вашему API
     fun getUsers(): Call<List<User>>
+
+//    @GET("api/users/") // Убедитесь, что путь соответствует вашему API
+//    fun getUsers(
+//        @Query("ordering") ordering: String?, // Для сортировки
+//        @Query("search") search: String?,    // Для поиска
+//        @QueryMap filters: Map<String, String> = emptyMap()       // Дополнительное поле фильтрации
+//    ): Call<List<User>>
 
     @GET("api/shipments/") // Например, для отгрузок
     fun getShipments(): Call<List<Shipment>>
@@ -36,6 +45,15 @@ interface ApiService {
 
     @GET("api/write-off-products/") // Для списания продуктов
     fun getWriteOffProducts(): Call<List<WriteOffOfProducts>>
+
+    @GET("api/users/")
+    fun getUsersFiltered(
+        @Query("ordering") ordering: String?, // Для сортировки
+        @Query("search") search: String?,    // Для поиска
+        @QueryMap filters: Map<String, String> = emptyMap()       // Дополнительное поле фильтрации
+    ): Call<List<User>>
+
+
 
 
 
