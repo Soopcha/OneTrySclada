@@ -121,6 +121,16 @@ class MainActivity : AppCompatActivity() {
                 tableTitle.text = "User Table"
                 updateSortFieldSpinner(listOf("ID", "Name", "Email", "Login"))
                 fetchUsers()
+
+                searchEditText.addTextChangedListener(object : TextWatcher {
+                    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+                    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                        filterUsers(s.toString())
+                    }
+
+                    override fun afterTextChanged(s: Editable?) {}
+                })
             }
 
             shipmentButton.setOnClickListener {
@@ -141,21 +151,61 @@ class MainActivity : AppCompatActivity() {
             productButton.setOnClickListener {
                 updateSortFieldSpinner(listOf("ID", "Name", "Shipment", "Manufacturer"))
                 showProductTable()
+
+                searchEditText.addTextChangedListener(object : TextWatcher {
+                    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+                    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                        filterProducts(s.toString())
+                    }
+
+                    override fun afterTextChanged(s: Editable?) {}
+                })
             }
 
             writeOffProductsButton.setOnClickListener {
                 updateSortFieldSpinner(listOf("ID", "User", "Quantity", "Date"))
                 showWriteOffProducts()
+
+                searchEditText.addTextChangedListener(object : TextWatcher {
+                    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+                    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                        filterWriteOffOfProducts(s.toString())
+                    }
+
+                    override fun afterTextChanged(s: Editable?) {}
+                })
             }
 
             productsCurrentQuantityButton.setOnClickListener {
                 updateSortFieldSpinner(listOf("ID", "Product Name", "Available Quantity"))
                 showProductsCurrentQuantity()
+
+                searchEditText.addTextChangedListener(object : TextWatcher {
+                    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+                    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                        filterProductsCurrentQuantity(s.toString())
+                    }
+
+                    override fun afterTextChanged(s: Editable?) {}
+                })
             }
 
             extraditionButton.setOnClickListener {
                 updateSortFieldSpinner(listOf("ID", "User", "Date", "Quantity"))
                 showExtradition()
+
+                searchEditText.addTextChangedListener(object : TextWatcher {
+                    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+                    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                        filterExtradition(s.toString())
+                    }
+
+                    override fun afterTextChanged(s: Editable?) {}
+                })
             }
 
 
@@ -453,6 +503,22 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    private fun filterUsers(query: String) {
+        val filteredUsers = if (query.isEmpty()) {
+            users
+        } else {
+            users.filter {
+                it.user_id.toString().contains(query, ignoreCase = true) ||
+                        it.user_name.contains(query, ignoreCase = true) ||
+                        it.email.contains(query, ignoreCase = true) ||
+                        it.login.contains(query, ignoreCase = true)
+            }
+        }
+
+        val tableAdapter = TableAdapter(this, tableLayout, filteredUsers)
+        tableAdapter.populateTable("User")
+    }
+
     private fun filterShipments(query: String) {
         val filteredShipments = if (query.isEmpty()) {
             shipments
@@ -467,6 +533,70 @@ class MainActivity : AppCompatActivity() {
         // Обновляем таблицу с отфильтрованным списком
         val tableAdapter = TableAdapter(this, tableLayout, filteredShipments)
         tableAdapter.populateTable("Shipment")
+    }
+
+    private fun filterProducts(query: String) {
+        val filteredProducts = if (query.isEmpty()) {
+            products
+        } else {
+            products.filter {
+                it.product_id.toString().contains(query, ignoreCase = true) ||
+                        it.product_name.contains(query, ignoreCase = true) ||
+                        it.shipment.toString().contains(query, ignoreCase = true) ||
+                        it.manufacturer.contains(query, ignoreCase = true)
+            }
+        }
+
+        val tableAdapter = TableAdapter(this, tableLayout, filteredProducts)
+        tableAdapter.populateTable("Product")
+    }
+
+    private fun filterWriteOffOfProducts(query: String) {
+        val filteredWriteOffs = if (query.isEmpty()) {
+            writeOffProducts
+        } else {
+            writeOffProducts.filter {
+                it.id_product_write_off.toString().contains(query, ignoreCase = true) ||
+                        it.user.toString().contains(query, ignoreCase = true) ||
+                        it.quantity.toString().contains(query, ignoreCase = true) ||
+                        it.reason.contains(query, ignoreCase = true) ||
+                        it.product_write_off_date.contains(query, ignoreCase = true)
+            }
+        }
+
+        val tableAdapter = TableAdapter(this, tableLayout, filteredWriteOffs)
+        tableAdapter.populateTable("WriteOffOfProducts")
+    }
+
+    private fun filterExtradition(query: String) {
+        val filteredExtraditions = if (query.isEmpty()) {
+            extraditions
+        } else {
+            extraditions.filter {
+                it.extradition_id.toString().contains(query, ignoreCase = true) ||
+                        it.quantity.toString().contains(query, ignoreCase = true) ||
+                        it.date_of_extradition.contains(query, ignoreCase = true) ||
+                        it.user.toString().contains(query, ignoreCase = true) == true // Проверка на null
+            }
+        }
+
+        val tableAdapter = TableAdapter(this, tableLayout, filteredExtraditions)
+        tableAdapter.populateTable("Extradition")
+    }
+
+    private fun filterProductsCurrentQuantity(query: String) {
+        val filteredProductsCurrentQuantities = if (query.isEmpty()) {
+            productsCurrentQuantities
+        } else {
+            productsCurrentQuantities.filter {
+                it.product_current_quantity_id.toString().contains(query, ignoreCase = true) ||
+                        it.product.toString().contains(query, ignoreCase = true) ||
+                        it.quantity.toString().contains(query, ignoreCase = true)
+            }
+        }
+
+        val tableAdapter = TableAdapter(this, tableLayout, filteredProductsCurrentQuantities)
+        tableAdapter.populateTable("ProductsCurrentQuantity")
     }
 
 
