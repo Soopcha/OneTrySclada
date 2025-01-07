@@ -82,6 +82,8 @@ class MainActivity : AppCompatActivity() {
             // Инициализация tableLayout после setContentView
             tableLayout = findViewById(R.id.tableLayout) // Ensure this is initialized
 
+            searchEditText = findViewById(R.id.searchEditText) // Инициализация searchEditText
+
             // Найдите кнопки и TextView по ID
             userButton = findViewById(R.id.user_button)
             shipmentButton = findViewById(R.id.shipment_button)
@@ -124,6 +126,16 @@ class MainActivity : AppCompatActivity() {
             shipmentButton.setOnClickListener {
                 updateSortFieldSpinner(listOf("ID", "Date", "User"))
                 showShipmentTable()
+
+                searchEditText.addTextChangedListener(object : TextWatcher {
+                    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+                    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                        filterShipments(s.toString())
+                    }
+
+                    override fun afterTextChanged(s: Editable?) {}
+                })
             }
 
             productButton.setOnClickListener {
@@ -339,11 +351,13 @@ class MainActivity : AppCompatActivity() {
         call.enqueue(object : Callback<List<Shipment>> {
             override fun onResponse(call: Call<List<Shipment>>, response: Response<List<Shipment>>) {
                 if (response.isSuccessful) {
-                    shipments.clear() // Очистите список перед добавлением новых данных
+                    shipments.clear()
                     response.body()?.let { shipments.addAll(it) }
 
-                    val tableAdapter = TableAdapter(this@MainActivity, tableLayout, shipments)
-                    tableAdapter.populateTable("Shipment")
+                    // Фильтруем и обновляем таблицу
+                    filterShipments(searchEditText.text.toString())
+                } else {
+                    Log.e("MainActivity", "Error: ${response.code()}")
                 }
             }
 
@@ -438,6 +452,23 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
+
+    private fun filterShipments(query: String) {
+        val filteredShipments = if (query.isEmpty()) {
+            shipments
+        } else {
+            shipments.filter {
+                it.shipment_id.toString().contains(query, ignoreCase = true) ||
+                        it.date_of_shipment.contains(query, ignoreCase = true) ||
+                        it.user.toString().contains(query, ignoreCase = true) == true // Проверка на null
+            }
+        }
+
+        // Обновляем таблицу с отфильтрованным списком
+        val tableAdapter = TableAdapter(this, tableLayout, filteredShipments)
+        tableAdapter.populateTable("Shipment")
+    }
+
 
 //    private fun fetchUsersWithFilter(field: String?, order: String?, query: String?) {
 //        val call = RetrofitClient.apiService.getUsersFiltered(field, order, field)
