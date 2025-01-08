@@ -56,6 +56,14 @@ interface ApiService {
     @GET("api/write-off-products/")
     fun getWriteOffProductsFiltered(@QueryMap filters: Map<String, String>): Call<List<WriteOffOfProducts>>
 
+    @GET("api/products/")
+    fun getProductsFiltered(
+        @Query("ordering") ordering: String? = null, // Для сортировки
+        @Query("search") search: String? = null,    // Для поиска
+        @QueryMap filters: Map<String, String> = emptyMap() // Для фильтрации
+    ): Call<List<Product>>
+
+
 
 
 

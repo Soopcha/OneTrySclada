@@ -153,6 +153,22 @@ class MainActivity : AppCompatActivity() {
 
             productButton.setOnClickListener {
                 updateSortFieldSpinner(listOf("ID", "Name", "Shipment", "Manufacturer"))
+
+                val productTypes = listOf("All", "Type A", "Type B", "Type C") // Укажите ваши типы продуктов
+                val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, productTypes)
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                filterRoleSpinner.adapter = adapter
+
+                filterRoleSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                    override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                        val selectedType = productTypes[position]
+                        val filters = if (selectedType == "All") emptyMap() else mapOf("product_type" to selectedType)
+                        fetchProducts(filters = filters)
+                    }
+
+                    override fun onNothingSelected(parent: AdapterView<*>) {}
+                }
+
                 showProductTable()
 
                 searchEditText.addTextChangedListener(object : TextWatcher {
@@ -446,14 +462,15 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun fetchProducts() {
-        val call = RetrofitClient.apiService.getProducts()
+    private fun fetchProducts(filters: Map<String, String> = emptyMap()) {
+        val call = RetrofitClient.apiService.getProductsFiltered(filters = filters)
         call.enqueue(object : Callback<List<Product>> {
             override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
                 if (response.isSuccessful) {
                     products.clear() // Очистите список перед добавлением новых данных
                     response.body()?.let { products.addAll(it) }
 
+                    // Заполняем таблицу данными
                     val tableAdapter = TableAdapter(this@MainActivity, tableLayout, products)
                     tableAdapter.populateTable("Product")
                 } else {
@@ -466,6 +483,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
+
 
 
 
@@ -629,6 +647,11 @@ class MainActivity : AppCompatActivity() {
         val tableAdapter = TableAdapter(this, tableLayout, filteredProductsCurrentQuantities)
         tableAdapter.populateTable("ProductsCurrentQuantity")
     }
+
+    private fun setFilterSpinnerVisibility(isVisible: Boolean) {
+        filterRoleSpinner.visibility = if (isVisible) View.VISIBLE else View.GONE
+    }
+
 
 
 //    private fun fetchUsersWithFilter(field: String?, order: String?, query: String?) {
