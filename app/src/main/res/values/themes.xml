@@ -1,9 +1,16 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Базовая тема приложения -->
     <style name="Base.Theme.OneTrySclada" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <!-- Настройка светлой темы -->
     </style>
 
     <style name="Theme.OneTrySclada" parent="Base.Theme.OneTrySclada" />
+
+    <!-- Тема для загрузочного экрана -->
+    <style name="Theme.App.SplashScreen" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="windowSplashScreenBackground">@color/primary_color</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/logo</item>
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+        <item name="postSplashScreenTheme">@style/Theme.OneTrySclada</item>
+    </style>
 </resources>
