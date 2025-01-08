@@ -99,12 +99,13 @@
             android:padding="8dp" />
     </LinearLayout>
 
-    <!-- Spinner для фильтрации по ролям -->
+    <!-- Spinner для фильтрации выпадающей -->
     <Spinner
         android:id="@+id/filterOtherSpinner"
         android:layout_width="0dp"
         android:layout_height="48dp"
         android:padding="8dp"
+        android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/sorting_controls"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

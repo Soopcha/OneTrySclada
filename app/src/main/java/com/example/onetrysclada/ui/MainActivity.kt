@@ -107,6 +107,9 @@ class MainActivity : AppCompatActivity() {
                 tableTitle.text = "User Table"
                 updateSortFieldSpinner(listOf("ID", "Name", "Email", "Login"))
 
+                // Показать фильтр
+                setFilterSpinnerVisibility(true)
+
                 val roles = listOf("All", "admin", "user")
                 val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, roles)
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -137,6 +140,9 @@ class MainActivity : AppCompatActivity() {
             }
 
             shipmentButton.setOnClickListener {
+                // Скрыть фильтр
+                setFilterSpinnerVisibility(false)
+
                 updateSortFieldSpinner(listOf("ID", "Date", "User"))
                 showShipmentTable()
 
@@ -153,6 +159,9 @@ class MainActivity : AppCompatActivity() {
 
             productButton.setOnClickListener {
                 updateSortFieldSpinner(listOf("ID", "Name", "Shipment", "Manufacturer"))
+
+                // Показать фильтр
+                setFilterSpinnerVisibility(true)
 
                 val productTypes = listOf("All", "Type A", "Type B", "Type C") // Укажите ваши типы продуктов
                 val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, productTypes)
@@ -184,6 +193,9 @@ class MainActivity : AppCompatActivity() {
 
             writeOffProductsButton.setOnClickListener {
                 updateSortFieldSpinner(listOf("ID", "User", "Quantity", "Date"))
+
+                // Показать фильтр
+                setFilterSpinnerVisibility(true)
 
                 val filters = listOf("All", "Defective", "Expired")
                 val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, filters)
@@ -222,6 +234,9 @@ class MainActivity : AppCompatActivity() {
             }
 
             productsCurrentQuantityButton.setOnClickListener {
+                // Скрыть фильтр
+                setFilterSpinnerVisibility(false)
+
                 updateSortFieldSpinner(listOf("ID", "Product Name", "Available Quantity"))
                 showProductsCurrentQuantity()
 
@@ -238,6 +253,9 @@ class MainActivity : AppCompatActivity() {
 
 
             extraditionButton.setOnClickListener {
+                // Скрыть фильтр
+                setFilterSpinnerVisibility(false)
+
                 updateSortFieldSpinner(listOf("ID", "User", "Date", "Quantity"))
                 showExtradition()
 
