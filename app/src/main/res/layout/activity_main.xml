@@ -99,17 +99,6 @@
         </LinearLayout>
 
         <!-- Subscribe Button -->
-        <Button
-            android:id="@+id/subscribe_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Subscribe"
-            android:backgroundTint="#9D4545"
-            android:textColor="@android:color/white"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentTop="true"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="16dp" />
 
     </RelativeLayout>
 

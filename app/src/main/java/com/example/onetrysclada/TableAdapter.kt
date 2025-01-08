@@ -3,9 +3,12 @@ package com.example.onetrysclada
 import android.app.AlertDialog
 import android.content.Context
 import android.graphics.Color
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 // import android.telecom.Call
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
@@ -855,9 +858,9 @@ class TableAdapter<T>(
 
     //ДОБАВЛЕНИЕ ПОШЛО
     private fun openAddUserDialog() {
-        val dialog = AlertDialog.Builder(context)
+        val dialogBuilder = AlertDialog.Builder(context)
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_user, null)
-        dialog.setView(dialogView)
+        dialogBuilder.setView(dialogView)
 
         val nameEditText = dialogView.findViewById<EditText>(R.id.edit_user_name)
         val loginEditText = dialogView.findViewById<EditText>(R.id.edit_user_login)
@@ -865,23 +868,61 @@ class TableAdapter<T>(
         val passwordEditText = dialogView.findViewById<EditText>(R.id.edit_user_password)
         val phoneNumberEditText = dialogView.findViewById<EditText>(R.id.edit_user_phone_number)
         val roleEditText = dialogView.findViewById<EditText>(R.id.edit_user_role)
+        val warningTextView = dialogView.findViewById<TextView>(R.id.warning_text)
 
-        dialog.setPositiveButton("Save") { _, _ ->
-            val newUser = User(
-                user_id = 0,  // ID будет присвоен автоматически
-                user_name = nameEditText.text.toString(),
-                login = loginEditText.text.toString(),
-                email = emailEditText.text.toString(),
-                password = passwordEditText.text.toString(),
-                phone_number = phoneNumberEditText.text.toString(),
-                role = roleEditText.text.toString()
-            )
-            addUser(newUser)
+        warningTextView.visibility = View.GONE
+
+        dialogBuilder.setPositiveButton("Save", null) // Кнопка без Listener, Listener будет добавлен позже.
+        dialogBuilder.setNegativeButton("Cancel", null)
+
+        val dialog = dialogBuilder.create()
+
+        dialog.setOnShowListener {
+            val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            saveButton.isEnabled = false // Изначально отключена.
+
+            val textFields = listOf(nameEditText, loginEditText, emailEditText, passwordEditText, phoneNumberEditText, roleEditText)
+
+            // Добавляем TextWatcher для проверки заполненности всех полей.
+            val watcher = object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    val allFieldsFilled = textFields.all { it.text.isNotBlank() }
+                    saveButton.isEnabled = allFieldsFilled
+
+                    if (!allFieldsFilled) {
+                        warningTextView.visibility = View.VISIBLE
+                        warningTextView.text = "Все поля должны быть заполнены."
+                    } else {
+                        warningTextView.visibility = View.GONE
+                    }
+                }
+
+                override fun afterTextChanged(s: Editable?) {}
+            }
+
+            // Добавляем TextWatcher ко всем полям.
+            textFields.forEach { it.addTextChangedListener(watcher) }
+
+            saveButton.setOnClickListener {
+                val newUser = User(
+                    user_id = 0,  // ID будет присвоен автоматически
+                    user_name = nameEditText.text.toString(),
+                    login = loginEditText.text.toString(),
+                    email = emailEditText.text.toString(),
+                    password = passwordEditText.text.toString(),
+                    phone_number = phoneNumberEditText.text.toString(),
+                    role = roleEditText.text.toString()
+                )
+                addUser(newUser)
+                dialog.dismiss()
+            }
         }
 
-        dialog.setNegativeButton("Cancel", null)
-        dialog.create().show()
+        dialog.show()
     }
+
+
 
 
     private fun addUser(user: User) {
@@ -903,9 +944,9 @@ class TableAdapter<T>(
     }
 
     private fun openAddProductDialog() {
-        val dialog = AlertDialog.Builder(context)
+        val dialogBuilder = AlertDialog.Builder(context)
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_product, null)
-        dialog.setView(dialogView)
+        dialogBuilder.setView(dialogView)
 
         val nameEditText = dialogView.findViewById<EditText>(R.id.edit_product_name)
         val expireDateEditText = dialogView.findViewById<EditText>(R.id.edit_product_expire_date)
@@ -915,24 +956,62 @@ class TableAdapter<T>(
         val shipmentEditText = dialogView.findViewById<EditText>(R.id.edit_product_shipment)
         val writeOffEditText = dialogView.findViewById<EditText>(R.id.edit_product_write_off)
         val extraditionEditText = dialogView.findViewById<EditText>(R.id.edit_product_extradition)
+        val warningTextView = dialogView.findViewById<TextView>(R.id.warning_text)
 
-        dialog.setPositiveButton("Save") { _, _ ->
-            val newProduct = Product(
-                product_id = 0,
-                product_name = nameEditText.text.toString(),
-                expire_date = expireDateEditText.text.toString(),
-                product_type = typeEditText.text.toString(),
-                manufacturer = manufacturerEditText.text.toString(),
-                weight = weightEditText.text.toString().toDoubleOrNull() ?: 0.0,
-                shipment = shipmentEditText.text.toString().toIntOrNull() ?: 0,
-                write_off_of_products = writeOffEditText.text.toString().toIntOrNull(),
-                extradition = extraditionEditText.text.toString().toIntOrNull()
-            )
-            addProduct(newProduct)
+        warningTextView.visibility = View.GONE // Изначально скрываем предупреждение.
+
+        dialogBuilder.setPositiveButton("Save", null) // Кнопка без Listener, Listener будет добавлен позже.
+        dialogBuilder.setNegativeButton("Cancel", null)
+
+        val dialog = dialogBuilder.create()
+
+        dialog.setOnShowListener {
+            val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            saveButton.isEnabled = false // Изначально отключена.
+
+            val textFields = listOf(nameEditText, expireDateEditText, typeEditText, manufacturerEditText, weightEditText, shipmentEditText, writeOffEditText,extraditionEditText)
+
+            // Добавляем TextWatcher для проверки заполненности всех полей.
+            val watcher = object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    val allFieldsFilled = textFields.all { it.text.isNotBlank() }
+                    saveButton.isEnabled = allFieldsFilled
+
+                    if (!allFieldsFilled) {
+                        warningTextView.visibility = View.VISIBLE
+                        warningTextView.text = "Все обязательные поля должны быть заполнены."
+                    } else {
+                        warningTextView.visibility = View.GONE
+                    }
+                }
+
+                override fun afterTextChanged(s: Editable?) {}
+            }
+
+            // Добавляем TextWatcher ко всем обязательным полям.
+            textFields.forEach { it.addTextChangedListener(watcher) }
+
+            saveButton.setOnClickListener {
+                val newProduct = Product(
+                    product_id = 0,
+                    product_name = nameEditText.text.toString(),
+                    expire_date = expireDateEditText.text.toString(),
+                    product_type = typeEditText.text.toString(),
+                    manufacturer = manufacturerEditText.text.toString(),
+                    weight = weightEditText.text.toString().toDoubleOrNull() ?: 0.0,
+                    shipment = shipmentEditText.text.toString().toIntOrNull() ?: 0,
+                    write_off_of_products = writeOffEditText.text.toString().toIntOrNull(),
+                    extradition = extraditionEditText.text.toString().toIntOrNull()
+                )
+                addProduct(newProduct)
+                dialog.dismiss()
+            }
         }
-        dialog.setNegativeButton("Cancel", null)
-        dialog.create().show()
+
+        dialog.show()
     }
+
 
 
     private fun addProduct(product: Product) {
@@ -956,25 +1035,60 @@ class TableAdapter<T>(
 
     // Метод для открытия диалога добавления новой записи Shipment
     private fun openAddShipmentDialog() {
-        val dialog = AlertDialog.Builder(context)
+        val dialogBuilder = AlertDialog.Builder(context)
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_shipment, null)
-        dialog.setView(dialogView)
+        dialogBuilder.setView(dialogView)
 
         val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_shipment_quantity)
         val dateEditText = dialogView.findViewById<EditText>(R.id.edit_shipment_date)
         val userIdEditText = dialogView.findViewById<EditText>(R.id.edit_shipment_user_id)
+        val warningTextView = dialogView.findViewById<TextView>(R.id.warning_text)
 
-        dialog.setPositiveButton("Save") { _, _ ->
-            val newShipment = Shipment(
-                shipment_id = 0, // ID будет присвоен автоматически
-                quantity = quantityEditText.text.toString().toIntOrNull() ?: 0,
-                date_of_shipment = dateEditText.text.toString(),
-                user = userIdEditText.text.toString().toIntOrNull() ?: 0
-            )
-            addShipment(newShipment)
+        warningTextView.visibility = View.GONE
+
+        dialogBuilder.setPositiveButton("Save", null)
+        dialogBuilder.setNegativeButton("Cancel", null)
+
+        val dialog = dialogBuilder.create()
+
+        dialog.setOnShowListener {
+            val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            saveButton.isEnabled = false
+
+            val textFields = listOf(quantityEditText, dateEditText, userIdEditText)
+
+            val watcher = object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    val allFieldsFilled = textFields.all { it.text.isNotBlank() }
+                    saveButton.isEnabled = allFieldsFilled
+
+                    if (!allFieldsFilled) {
+                        warningTextView.visibility = View.VISIBLE
+                        warningTextView.text = "Все поля должны быть заполнены."
+                    } else {
+                        warningTextView.visibility = View.GONE
+                    }
+                }
+
+                override fun afterTextChanged(s: Editable?) {}
+            }
+
+            textFields.forEach { it.addTextChangedListener(watcher) }
+
+            saveButton.setOnClickListener {
+                val newShipment = Shipment(
+                    shipment_id = 0,
+                    quantity = quantityEditText.text.toString().toIntOrNull() ?: 0,
+                    date_of_shipment = dateEditText.text.toString(),
+                    user = userIdEditText.text.toString().toIntOrNull() ?: 0
+                )
+                addShipment(newShipment)
+                dialog.dismiss()
+            }
         }
-        dialog.setNegativeButton("Cancel", null)
-        dialog.create().show()
+
+        dialog.show()
     }
 
     // Метод для добавления новой записи Shipment через API
@@ -999,28 +1113,62 @@ class TableAdapter<T>(
 
 
     private fun openAddWriteOffProductsDialog() {
-        val dialog = AlertDialog.Builder(context)
+        val dialogBuilder = AlertDialog.Builder(context)
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_write_off_products, null)
-        dialog.setView(dialogView)
+        dialogBuilder.setView(dialogView)
 
         val dateEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_date)
         val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_quantity)
         val reasonEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_reason)
         val userEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_user)
+        val warningTextView = dialogView.findViewById<TextView>(R.id.warning_text)
 
-        dialog.setPositiveButton("Save") { _, _ ->
-            val newWriteOffProduct = WriteOffOfProducts(
-                id_product_write_off = 0,
-                product_write_off_date = dateEditText.text.toString(),
-                quantity = quantityEditText.text.toString().toIntOrNull() ?: 0,
-                reason = reasonEditText.text.toString(),
-                user = userEditText.text.toString().toIntOrNull() ?: 0
-            )
-            addWriteOffProduct(newWriteOffProduct)
+        warningTextView.visibility = View.GONE
+
+        dialogBuilder.setPositiveButton("Save", null)
+        dialogBuilder.setNegativeButton("Cancel", null)
+
+        val dialog = dialogBuilder.create()
+
+        dialog.setOnShowListener {
+            val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            saveButton.isEnabled = false
+
+            val textFields = listOf(dateEditText, quantityEditText, reasonEditText, userEditText)
+
+            val watcher = object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    val allFieldsFilled = textFields.all { it.text.isNotBlank() }
+                    saveButton.isEnabled = allFieldsFilled
+
+                    if (!allFieldsFilled) {
+                        warningTextView.visibility = View.VISIBLE
+                        warningTextView.text = "Все поля должны быть заполнены."
+                    } else {
+                        warningTextView.visibility = View.GONE
+                    }
+                }
+
+                override fun afterTextChanged(s: Editable?) {}
+            }
+
+            textFields.forEach { it.addTextChangedListener(watcher) }
+
+            saveButton.setOnClickListener {
+                val newWriteOffProduct = WriteOffOfProducts(
+                    id_product_write_off = 0,
+                    product_write_off_date = dateEditText.text.toString(),
+                    quantity = quantityEditText.text.toString().toIntOrNull() ?: 0,
+                    reason = reasonEditText.text.toString(),
+                    user = userEditText.text.toString().toIntOrNull() ?: 0
+                )
+                addWriteOffProduct(newWriteOffProduct)
+                dialog.dismiss()
+            }
         }
 
-        dialog.setNegativeButton("Cancel", null)
-        dialog.create().show()
+        dialog.show()
     }
 
     private fun addWriteOffProduct(writeOffProduct: WriteOffOfProducts) {
@@ -1042,24 +1190,58 @@ class TableAdapter<T>(
     }
 
     private fun openAddProductsCurrentQuantityDialog() {
-        val dialog = AlertDialog.Builder(context)
+        val dialogBuilder = AlertDialog.Builder(context)
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_products_current_quantity, null)
-        dialog.setView(dialogView)
+        dialogBuilder.setView(dialogView)
 
         val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_products_current_quantity_quantity)
         val productEditText = dialogView.findViewById<EditText>(R.id.edit_products_current_quantity_product)
+        val warningTextView = dialogView.findViewById<TextView>(R.id.warning_text)
 
-        dialog.setPositiveButton("Save") { _, _ ->
-            val newProductsCurrentQuantity = ProductsCurrentQuantity(
-                product_current_quantity_id = 0,
-                quantity = quantityEditText.text.toString().toIntOrNull() ?: 0,
-                product = productEditText.text.toString().toIntOrNull() ?: 0
-            )
-            addProductsCurrentQuantity(newProductsCurrentQuantity)
+        warningTextView.visibility = View.GONE
+
+        dialogBuilder.setPositiveButton("Save", null)
+        dialogBuilder.setNegativeButton("Cancel", null)
+
+        val dialog = dialogBuilder.create()
+
+        dialog.setOnShowListener {
+            val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            saveButton.isEnabled = false
+
+            val textFields = listOf(quantityEditText, productEditText)
+
+            val watcher = object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    val allFieldsFilled = textFields.all { it.text.isNotBlank() }
+                    saveButton.isEnabled = allFieldsFilled
+
+                    if (!allFieldsFilled) {
+                        warningTextView.visibility = View.VISIBLE
+                        warningTextView.text = "Все поля должны быть заполнены."
+                    } else {
+                        warningTextView.visibility = View.GONE
+                    }
+                }
+
+                override fun afterTextChanged(s: Editable?) {}
+            }
+
+            textFields.forEach { it.addTextChangedListener(watcher) }
+
+            saveButton.setOnClickListener {
+                val newProductsCurrentQuantity = ProductsCurrentQuantity(
+                    product_current_quantity_id = 0,
+                    quantity = quantityEditText.text.toString().toIntOrNull() ?: 0,
+                    product = productEditText.text.toString().toIntOrNull() ?: 0
+                )
+                addProductsCurrentQuantity(newProductsCurrentQuantity)
+                dialog.dismiss()
+            }
         }
 
-        dialog.setNegativeButton("Cancel", null)
-        dialog.create().show()
+        dialog.show()
     }
 
     private fun addProductsCurrentQuantity(productsCurrentQuantity: ProductsCurrentQuantity) {
@@ -1079,28 +1261,64 @@ class TableAdapter<T>(
             }
         })
     }
+
     private fun openAddExtraditionDialog() {
-        val dialog = AlertDialog.Builder(context)
+        val dialogBuilder = AlertDialog.Builder(context)
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_extradition, null)
-        dialog.setView(dialogView)
+        dialogBuilder.setView(dialogView)
 
         val dateEditText = dialogView.findViewById<EditText>(R.id.edit_extradition_date)
         val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_extradition_quantity)
         val userEditText = dialogView.findViewById<EditText>(R.id.edit_extradition_user)
+        val warningTextView = dialogView.findViewById<TextView>(R.id.warning_text)
 
-        dialog.setPositiveButton("Save") { _, _ ->
-            val newExtradition = Extradition(
-                extradition_id = 0,
-                date_of_extradition = dateEditText.text.toString(),
-                quantity = quantityEditText.text.toString().toIntOrNull() ?: 0,
-                user = userEditText.text.toString().toIntOrNull() ?: 0
-            )
-            addExtradition(newExtradition)
+        warningTextView.visibility = View.GONE
+
+        dialogBuilder.setPositiveButton("Save", null)
+        dialogBuilder.setNegativeButton("Cancel", null)
+
+        val dialog = dialogBuilder.create()
+
+        dialog.setOnShowListener {
+            val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            saveButton.isEnabled = false
+
+            val textFields = listOf(dateEditText, quantityEditText, userEditText)
+
+            val watcher = object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    val allFieldsFilled = textFields.all { it.text.isNotBlank() }
+                    saveButton.isEnabled = allFieldsFilled
+
+                    if (!allFieldsFilled) {
+                        warningTextView.visibility = View.VISIBLE
+                        warningTextView.text = "Все поля должны быть заполнены."
+                    } else {
+                        warningTextView.visibility = View.GONE
+                    }
+                }
+
+                override fun afterTextChanged(s: Editable?) {}
+            }
+
+            textFields.forEach { it.addTextChangedListener(watcher) }
+
+            saveButton.setOnClickListener {
+                val newExtradition = Extradition(
+                    extradition_id = 0,
+                    date_of_extradition = dateEditText.text.toString(),
+                    quantity = quantityEditText.text.toString().toIntOrNull() ?: 0,
+                    user = userEditText.text.toString().toIntOrNull() ?: 0
+                )
+                addExtradition(newExtradition)
+                dialog.dismiss()
+            }
         }
 
-        dialog.setNegativeButton("Cancel", null)
-        dialog.create().show()
+        dialog.show()
     }
+
 
     private fun addExtradition(extradition: Extradition) {
         val apiService = RetrofitClient.apiService
