@@ -53,6 +53,10 @@ interface ApiService {
         @QueryMap filters: Map<String, String> = emptyMap()       // Дополнительное поле фильтрации
     ): Call<List<User>>
 
+    @GET("api/write-off-products/")
+    fun getWriteOffProductsFiltered(@QueryMap filters: Map<String, String>): Call<List<WriteOffOfProducts>>
+
+
 
 
 

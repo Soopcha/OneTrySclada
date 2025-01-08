@@ -97,29 +97,32 @@ class MainActivity : AppCompatActivity() {
             sortFieldSpinner = findViewById(R.id.sortFieldSpinner)
             sortOrderSpinner = findViewById(R.id.sortOrderSpinner)
 
-            // Инициализация фильтра по роли
-            filterRoleSpinner = findViewById(R.id.filterRoleSpinner)
-            val roles = listOf("all", "admin", "user")
-            val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, roles)
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            filterRoleSpinner.adapter = adapter
+            // Инициализация фильтра выдвижного
+            filterRoleSpinner = findViewById(R.id.filterOtherSpinner)
 
-            // Слушатель для Spinner фильтрации ролей
-            filterRoleSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                    val selectedRole = roles[position]
-                    val filters = if (selectedRole == "All") emptyMap() else mapOf("role" to selectedRole)
-                    fetchUsers(filters = filters)
-                }
-
-                override fun onNothingSelected(parent: AdapterView<*>) {}
-            }
 
 
             // Установите слушатели на кнопки
             userButton.setOnClickListener {
                 tableTitle.text = "User Table"
                 updateSortFieldSpinner(listOf("ID", "Name", "Email", "Login"))
+
+                val roles = listOf("All", "admin", "user")
+                val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, roles)
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                filterRoleSpinner.adapter = adapter
+
+                // Слушатель для Spinner фильтрации ролей
+                filterRoleSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                    override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                        val selectedRole = roles[position]
+                        val filters = if (selectedRole == "All") emptyMap() else mapOf("role" to selectedRole)
+                        fetchUsers(filters = filters)
+                    }
+
+                    override fun onNothingSelected(parent: AdapterView<*>) {}
+                }
+
                 fetchUsers()
 
                 searchEditText.addTextChangedListener(object : TextWatcher {
@@ -165,6 +168,30 @@ class MainActivity : AppCompatActivity() {
 
             writeOffProductsButton.setOnClickListener {
                 updateSortFieldSpinner(listOf("ID", "User", "Quantity", "Date"))
+
+                val filters = listOf("All", "Defective", "Expired")
+                val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, filters)
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
+                filterRoleSpinner.adapter = adapter
+
+                filterRoleSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                    override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                        val selectedFilter = filters[position]
+
+                        val filterParams = when (selectedFilter) {
+                            "Defective" -> mapOf("reason" to "Брак")
+                            "Expired" -> mapOf("reason" to "Просрочено")
+                            else -> emptyMap() // "All" - без фильтра
+                        }
+
+                        fetchWriteOffProducts(filterParams)
+                    }
+
+                    override fun onNothingSelected(parent: AdapterView<*>) {}
+                }
+
+
                 showWriteOffProducts()
 
                 searchEditText.addTextChangedListener(object : TextWatcher {
@@ -192,6 +219,7 @@ class MainActivity : AppCompatActivity() {
                     override fun afterTextChanged(s: Editable?) {}
                 })
             }
+
 
             extraditionButton.setOnClickListener {
                 updateSortFieldSpinner(listOf("ID", "User", "Date", "Quantity"))
@@ -367,6 +395,7 @@ class MainActivity : AppCompatActivity() {
     private fun showWriteOffProducts() {
         // Обновляем заголовок таблицы и выводим данные продуктов
         tableTitle.text = "Write Off Products Table"
+
         fetchWriteOffProducts() // Ваша логика получения данных продуктов
     }
 
@@ -482,14 +511,15 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun fetchWriteOffProducts() {
-        val call = RetrofitClient.apiService.getWriteOffProducts() // Предположим, у вас есть эндпоинт для списания продуктов
+    private fun fetchWriteOffProducts(filters: Map<String, String> = emptyMap()) {
+        val call = RetrofitClient.apiService.getWriteOffProductsFiltered(filters)
         call.enqueue(object : Callback<List<WriteOffOfProducts>> {
             override fun onResponse(call: Call<List<WriteOffOfProducts>>, response: Response<List<WriteOffOfProducts>>) {
                 if (response.isSuccessful) {
                     writeOffProducts.clear()
                     response.body()?.let { writeOffProducts.addAll(it) }
 
+                    // Заполняем таблицу данными
                     val tableAdapter = TableAdapter(this@MainActivity, tableLayout, writeOffProducts)
                     tableAdapter.populateTable("WriteOffProducts")
                 } else {
@@ -502,6 +532,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
+
 
     private fun filterUsers(query: String) {
         val filteredUsers = if (query.isEmpty()) {
