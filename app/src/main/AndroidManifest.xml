@@ -19,7 +19,7 @@
         tools:targetApi="31">
         <!-- SplashActivity как стартовый экран -->
         <activity
-            android:name=".ui.SplashActivity"
+            android:name=".ui.TableActivity"
             android:exported="true"
             android:theme="@style/Theme.App.SplashScreen">
             <intent-filter>

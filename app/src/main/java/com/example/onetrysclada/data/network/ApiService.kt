@@ -19,48 +19,47 @@ import retrofit2.http.QueryMap
 
 interface ApiService {
 
-    //ЧТЕНИЕ или ПОЛУЧЕНИЕ
+    // Аутентификация
+    @POST("api/login/")
+    fun login(@Body credentials: LoginRequest): Call<LoginResponse>
 
-    @GET("api/users/") // Убедитесь, что путь соответствует вашему API
+    // Получение данных (GET)
+    @GET("api/users/")
     fun getUsers(): Call<List<User>>
 
-//    @GET("api/users/") // Убедитесь, что путь соответствует вашему API
-//    fun getUsers(
-//        @Query("ordering") ordering: String?, // Для сортировки
-//        @Query("search") search: String?,    // Для поиска
-//        @QueryMap filters: Map<String, String> = emptyMap()       // Дополнительное поле фильтрации
-//    ): Call<List<User>>
-
-    @GET("api/shipments/") // Например, для отгрузок
+    @GET("api/shipments/")
     fun getShipments(): Call<List<Shipment>>
 
-    @GET("api/products/") // Для продуктов
+    @GET("api/products/")
     fun getProducts(): Call<List<Product>>
 
-    @GET("api/extraditions/") // Для экстрадиций
+    @GET("api/extraditions/")
     fun getExtraditions(): Call<List<Extradition>>
 
-    @GET("api/products-current-quantity/") // Для текущего количества продуктов
+    @GET("api/products-current-quantity/")
     fun getProductsCurrentQuantity(): Call<List<ProductsCurrentQuantity>>
 
-    @GET("api/write-off-products/") // Для списания продуктов
+    @GET("api/write-off-products/")
     fun getWriteOffProducts(): Call<List<WriteOffOfProducts>>
 
+    // Фильтрация и сортировка
     @GET("api/users/")
     fun getUsersFiltered(
-        @Query("ordering") ordering: String?, // Для сортировки
-        @Query("search") search: String?,    // Для поиска
-        @QueryMap filters: Map<String, String> = emptyMap()       // Дополнительное поле фильтрации
+        @Query("ordering") ordering: String? = null,
+        @Query("search") search: String? = null,
+        @QueryMap filters: Map<String, String> = emptyMap()
     ): Call<List<User>>
 
     @GET("api/write-off-products/")
-    fun getWriteOffProductsFiltered(@QueryMap filters: Map<String, String>): Call<List<WriteOffOfProducts>>
+    fun getWriteOffProductsFiltered(
+        @QueryMap filters: Map<String, String>
+    ): Call<List<WriteOffOfProducts>>
 
     @GET("api/products/")
     fun getProductsFiltered(
-        @Query("ordering") ordering: String? = null, // Для сортировки
-        @Query("search") search: String? = null,    // Для поиска
-        @QueryMap filters: Map<String, String> = emptyMap() // Для фильтрации
+        @Query("ordering") ordering: String? = null,
+        @Query("search") search: String? = null,
+        @QueryMap filters: Map<String, String> = emptyMap()
     ): Call<List<Product>>
 
 
@@ -71,6 +70,7 @@ interface ApiService {
 
     //ИЗМЕНЕНИЕ или ОБНАВЛЕНИЕ
 
+    // Обновление (PUT)
     @PUT("api/users/{id}/")
     fun updateUser(@Path("id") userId: Int, @Body user: User): Call<User>
 
@@ -91,8 +91,8 @@ interface ApiService {
 
 
 
-    //ДОБАВЛЕНИЕ
 
+    // Создание (POST)
     @POST("api/users/")
     fun addUser(@Body user: User): Call<User>
 
@@ -111,10 +111,7 @@ interface ApiService {
     @POST("api/write-off-products/")
     fun addWriteOffProduct(@Body writeOffOfProducts: WriteOffOfProducts): Call<WriteOffOfProducts>
 
-
-
-    //УДАЛЕНИЕ
-
+    // Удаление (DELETE)
     @DELETE("api/users/{id}/")
     fun deleteUser(@Path("id") userId: Int): Call<Void>
 
@@ -132,8 +129,23 @@ interface ApiService {
 
     @DELETE("api/write-off-products/{id}/")
     fun deleteWriteOffOfProducts(@Path("id") writeOffId: Int): Call<Void>
-
+    // Профиль пользователя
+    @GET("api/profile/")
+    fun getProfile(): Call<User>
 }
+
+// Модель для запроса на логин
+data class LoginRequest(
+    val login: String,
+    val password: String
+)
+
+// Модель для ответа с токеном
+data class LoginResponse(
+    val token: String
+)
+
+
 /*
 Для проверки защиты от XSS, SQL-инъекций и других уязвимостей в вашем приложении, вы можете использовать тестовые строки, чтобы попытаться внедрить вредоносный код в различные поля ввода или запросы. Вот как можно это сделать:
 

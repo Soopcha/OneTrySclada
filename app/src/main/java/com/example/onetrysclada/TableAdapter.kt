@@ -10,8 +10,12 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TableLayout
 import android.widget.TableRow
 import android.widget.TextView
@@ -23,6 +27,7 @@ import com.example.onetrysclada.data.models.Shipment
 import com.example.onetrysclada.data.models.User
 import com.example.onetrysclada.data.models.WriteOffOfProducts
 import com.example.onetrysclada.data.network.RetrofitClient
+import com.google.android.material.internal.ViewUtils.hideKeyboard
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -49,7 +54,6 @@ class TableAdapter<T>(
                 headerRow.addView(createTextView("ID"))
                 headerRow.addView(createTextView("Name"))
                 headerRow.addView(createTextView("Login"))
-                headerRow.addView(createTextView("Password"))
                 headerRow.addView(createTextView("Email"))
                 headerRow.addView(createTextView("Phone Number"))
                 headerRow.addView(createTextView("Role"))
@@ -101,32 +105,51 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.user_id.toString()))
                     row.addView(createTextView(item.user_name))
                     row.addView(createTextView(item.login))
-                    row.addView(createTextView(item.password))
                     row.addView(createTextView(item.email))
                     row.addView(createTextView(item.phone_number ?: ""))
                     row.addView(createTextView(item.role))
 
-                    val editButton = createEditButton("Edit") { openEditUserDialog(item) }
-                    row.addView(editButton)
-
-                    val deleteButton = createDeleteButton("Delete") { deleteUser(item.user_id) }
-                    row.addView(deleteButton)
-
-
+                    // Добавляем ячейку с иконками действий только для админов
+                    if (getCurrentUserRole() == "admin") {
+                        row.addView(createActionCell(
+                            onEditClick = { openEditUserDialog(item) },
+                            onDeleteClick = { deleteUser(item.user_id) }
+                        ))
+                    } else {
+                        // Добавляем пустую ячейку для сохранения выравнивания
+                        row.addView(LinearLayout(context).apply {
+                            layoutParams = TableRow.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                marginStart = 16
+                            }
+                        })
+                    }
                 }
+
                 is Shipment -> {
                     row.addView(createTextView(item.shipment_id.toString()))
                     row.addView(createTextView(item.quantity.toString()))
                     row.addView(createTextView(item.date_of_shipment))
                     row.addView(createTextView(item.user.toString()))
 
-                    val editButton = createEditButton("Edit") { openEditShipmentDialog(item) }
-                    row.addView(editButton)
-                //раньше было item.user.user_id и обращение уже к юзеру но что-то не работало так
-
-                    // Добавляем кнопку удаления
-                    val deleteButton = createDeleteButton("Delete") { deleteShipment(item.shipment_id) }
-                    row.addView(deleteButton)
+                    if (getCurrentUserRole() == "admin") {
+                        row.addView(createActionCell(
+                            onEditClick = { openEditShipmentDialog(item) },
+                            onDeleteClick = { deleteShipment(item.shipment_id) }
+                        ))
+                    } else {
+                        // Добавляем пустую ячейку для сохранения выравнивания
+                        row.addView(LinearLayout(context).apply {
+                            layoutParams = TableRow.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                marginStart = 16
+                            }
+                        })
+                    }
 
                 }
                 is Product -> {
@@ -141,11 +164,22 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.write_off_of_products?.toString() ?: "N/A"))
                     row.addView(createTextView(item.extradition?.toString() ?: "N/A"))
 
-                    val editButton = createEditButton("Edit") { openEditProductDialog(item) }
-                    row.addView(editButton)
-
-                    val deleteButton = createDeleteButton("Delete") { deleteProduct(item.product_id) }
-                    row.addView(deleteButton)
+                    if (getCurrentUserRole() == "admin") {
+                        row.addView(createActionCell(
+                            onEditClick = { openEditProductDialog(item) },
+                            onDeleteClick = { deleteProduct(item.product_id) }
+                        ))
+                    } else {
+                        // Добавляем пустую ячейку для сохранения выравнивания
+                        row.addView(LinearLayout(context).apply {
+                            layoutParams = TableRow.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                marginStart = 16
+                            }
+                        })
+                    }
                 }
                 is WriteOffOfProducts -> {
                     row.addView(createTextView(item.id_product_write_off.toString()))
@@ -154,12 +188,24 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.reason))
                     row.addView(createTextView(item.user.toString()))
 
-                    val editButton = createEditButton("Edit") { openEditWriteOffProductsDialog(item) }
-                    row.addView(editButton)
 
-                    // Кнопка удаления для WriteOffOfProducts
-                    val deleteButton = createDeleteButton("Delete") { deleteWriteOffOfProducts(item.id_product_write_off) }
-                    row.addView(deleteButton)
+
+                    if (getCurrentUserRole() == "admin") {
+                        row.addView(createActionCell(
+                            onEditClick = { openEditWriteOffProductsDialog(item) },
+                            onDeleteClick = { deleteWriteOffOfProducts(item.id_product_write_off) }
+                        ))
+                    } else {
+                        // Добавляем пустую ячейку для сохранения выравнивания
+                        row.addView(LinearLayout(context).apply {
+                            layoutParams = TableRow.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                marginStart = 16
+                            }
+                        })
+                    }
                 }
                 is Extradition -> {
                     row.addView(createTextView(item.extradition_id.toString()))
@@ -167,12 +213,24 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.quantity.toString()))
                     row.addView(createTextView(item.user.toString()))
 
-                    val editButton = createEditButton("Edit") { openEditExtraditionDialog(item) }
-                    row.addView(editButton)
 
-                    // Кнопка удаления для Extradition
-                    val deleteButton = createDeleteButton("Delete") { deleteExtradition(item.extradition_id) }
-                    row.addView(deleteButton)
+
+                    if (getCurrentUserRole() == "admin") {
+                        row.addView(createActionCell(
+                            onEditClick = { openEditExtraditionDialog(item) },
+                            onDeleteClick = { deleteExtradition(item.extradition_id) }
+                        ))
+                    } else {
+                        // Добавляем пустую ячейку для сохранения выравнивания
+                        row.addView(LinearLayout(context).apply {
+                            layoutParams = TableRow.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                marginStart = 16
+                            }
+                        })
+                    }
                 }
                 is ProductsCurrentQuantity -> {
 
@@ -182,13 +240,23 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.quantity.toString()))
                     row.addView(createTextView(item.product.toString()))
 
-                    // Кнопка редактирования
-                    val editButton = createEditButton("Edit") { openEditProductsCurrentQuantityDialog(item) }
-                    row.addView(editButton)
 
-                    // Кнопка удаления для ProductsCurrentQuantity
-                    val deleteButton = createDeleteButton("Delete") { deleteProductsCurrentQuantity(item.product_current_quantity_id) }
-                    row.addView(deleteButton)
+                    if (getCurrentUserRole() == "admin") {
+                        row.addView(createActionCell(
+                            onEditClick = { openEditProductsCurrentQuantityDialog(item) },
+                            onDeleteClick = { deleteProductsCurrentQuantity(item.product_current_quantity_id) }
+                        ))
+                    } else {
+                        // Добавляем пустую ячейку для сохранения выравнивания
+                        row.addView(LinearLayout(context).apply {
+                            layoutParams = TableRow.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                marginStart = 16
+                            }
+                        })
+                    }
 
 //                    // Логирование ошибок, если данные пустые или невалидные
 //                    if (item.product_current_quantity_id == null) {
@@ -203,15 +271,15 @@ class TableAdapter<T>(
             tableLayout.addView(row)
         }
 
-        // Добавляем нужную кнопку в зависимости от типа данных
-        when (dataType) {
-            "User" -> addButtonToTable("Add User") { openAddUserDialog() }
-            "Product" -> addButtonToTable("Add Product") { openAddProductDialog() }
-            "Shipment" -> addButtonToTable("Add Shipment") { openAddShipmentDialog() }
-            "WriteOffProducts" -> addButtonToTable("Add WriteOffProduct") { openAddWriteOffProductsDialog() }
-            "ProductsCurrentQuantity" -> addButtonToTable("Add ProductsCurrentQuantity") { openAddProductsCurrentQuantityDialog() }
-            "Extradition" -> addButtonToTable("Add Extradition") { openAddExtraditionDialog() }
-
+        if (getCurrentUserRole() == "admin") {
+            when (dataType) {
+                "User" -> addButtonToTable("Add User") { openAddUserDialog() }
+                "Product" -> addButtonToTable("Add Product") { openAddProductDialog() }
+                "Shipment" -> addButtonToTable("Add Shipment") { openAddShipmentDialog() }
+                "WriteOffProducts" -> addButtonToTable("Add WriteOffProduct") { openAddWriteOffProductsDialog() }
+                "ProductsCurrentQuantity" -> addButtonToTable("Add ProductsCurrentQuantity") { openAddProductsCurrentQuantityDialog() }
+                "Extradition" -> addButtonToTable("Add Extradition") { openAddExtraditionDialog() }
+            }
         }
 
     }
@@ -232,43 +300,64 @@ class TableAdapter<T>(
         tableLayout.addView(addButton)
     }
 
-    private fun createTextView(text: String): TextView {
+    private fun createTextView(text: String, isHeader: Boolean = false): TextView {
         return TextView(context).apply {
             this.text = text
             setPadding(16, 16, 16, 16)
-            setBackgroundColor(Color.LTGRAY) // Добавьте для отладки
-            setTextColor(Color.BLACK) // Устанавливаем черный цвет текста
+            setBackgroundColor(if (isHeader) Color.DKGRAY else Color.LTGRAY)
+            setTextColor(Color.BLACK)
             layoutParams = TableRow.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            )
+            ).apply {
+                minimumWidth = 150
+            }
+            if (isHeader) {
+                setTypeface(null, android.graphics.Typeface.BOLD)
+            }
+            maxLines = 2
+            ellipsize = android.text.TextUtils.TruncateAt.END
         }
     }
 
-    private fun createEditButton(text: String, onClick: () -> Unit): Button {
-        return Button(context).apply {
-            this.text = text
-            setOnClickListener { onClick() }
+    private fun createActionCell(onEditClick: () -> Unit, onDeleteClick: () -> Unit): LinearLayout {
+        return LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
             layoutParams = TableRow.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { marginStart = 16 }
-        }
-    }
+            ).apply {
+                marginStart = 16
+            }
 
-    private fun createDeleteButton(text: String, onClick: () -> Unit): Button {
-        return Button(context).apply {
-            this.text = text
-            setOnClickListener { onClick() }
-            layoutParams = TableRow.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { marginStart = 16 }
+            // Кнопка "Редактировать" (карандаш)
+            addView(ImageButton(context).apply {
+                setImageResource(R.drawable.edit1) // Укажи свой drawable
+                setBackgroundColor(Color.TRANSPARENT)
+                contentDescription = "Edit"
+                layoutParams = LinearLayout.LayoutParams(48, 48).apply {
+                    marginEnd = 8
+                }
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                setPadding(8, 8, 8, 8)
+                setOnClickListener { onEditClick() }
+            })
+
+            // Кнопка "Удалить" (крестик)
+            addView(ImageButton(context).apply {
+                setImageResource(R.drawable.delete1) // Укажи свой drawable
+                setBackgroundColor(Color.TRANSPARENT)
+                contentDescription = "Delete"
+                layoutParams = LinearLayout.LayoutParams(48, 48)
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                setPadding(8, 8, 8, 8)
+                setOnClickListener { onDeleteClick() }
+            })
         }
     }
 
     private fun fetchProductsAndUpdateTable() {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.getProducts().enqueue(object : Callback<List<Product>> {
             override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
@@ -291,7 +380,7 @@ class TableAdapter<T>(
     }
 
     private fun fetchProductsCurrentQuantityAndUpdateTable() {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.getProductsCurrentQuantity().enqueue(object : Callback<List<ProductsCurrentQuantity>> {
             override fun onResponse(call: Call<List<ProductsCurrentQuantity>>, response: Response<List<ProductsCurrentQuantity>>) {
@@ -314,7 +403,7 @@ class TableAdapter<T>(
     }
 
     private fun fetchWriteOffProductsAndUpdateTable() {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         apiService.getWriteOffProducts().enqueue(object : Callback<List<WriteOffOfProducts>> {
             override fun onResponse(
                 call: Call<List<WriteOffOfProducts>>,
@@ -340,7 +429,7 @@ class TableAdapter<T>(
 
     // Функция для запроса данных Shipment и обновления таблицы
     private fun fetchShipmentsAndUpdateTable() {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.getShipments().enqueue(object : Callback<List<Shipment>> {
             override fun onResponse(call: Call<List<Shipment>>, response: Response<List<Shipment>>) {
@@ -364,7 +453,7 @@ class TableAdapter<T>(
     }
 
     private fun fetchUsersAndUpdateTable() {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.getUsers().enqueue(object : Callback<List<User>> {
             override fun onResponse(call: Call<List<User>>, response: Response<List<User>>) {
@@ -388,7 +477,7 @@ class TableAdapter<T>(
 
 
     private fun fetchExtraditionsAndUpdateTable() {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.getExtraditions().enqueue(object : Callback<List<Extradition>> {
             override fun onResponse(call: Call<List<Extradition>>, response: Response<List<Extradition>>) {
@@ -413,60 +502,109 @@ class TableAdapter<T>(
 
 
     private fun openEditUserDialog(user: User) {
-        val dialog = AlertDialog.Builder(context)
+        val dialogBuilder = AlertDialog.Builder(context)
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_user, null)
-        dialog.setView(dialogView)
+        dialogBuilder.setView(dialogView)
 
         val nameEditText = dialogView.findViewById<EditText>(R.id.edit_user_name)
         val loginEditText = dialogView.findViewById<EditText>(R.id.edit_user_login)
         val emailEditText = dialogView.findViewById<EditText>(R.id.edit_user_email)
-        val passwordEditText =  dialogView.findViewById<EditText>(R.id.edit_user_password)
+        val passwordEditText = dialogView.findViewById<EditText>(R.id.edit_user_password)
         val phoneNumberEditText = dialogView.findViewById<EditText>(R.id.edit_user_phone_number)
         val roleEditText = dialogView.findViewById<EditText>(R.id.edit_user_role)
+        val warningTextView = dialogView.findViewById<TextView>(R.id.warning_text)
 
-        //записываем в поля что было до будущих изменений
+        warningTextView.visibility = View.GONE
+
         nameEditText.setText(user.user_name)
         loginEditText.setText(user.login)
         emailEditText.setText(user.email)
-        passwordEditText.setText(user.password)
         phoneNumberEditText.setText(user.phone_number)
         roleEditText.setText(user.role)
 
-        dialog.setPositiveButton("Сохранить") { _, _ ->
-            val newName = nameEditText.text.toString()
-            val newLogin = loginEditText.text.toString()
-            val newEmail = emailEditText.text.toString()
-            val newPassword = passwordEditText.text.toString()
-            val newPhoneNumber = phoneNumberEditText.text.toString()
-            val newRole = roleEditText.text.toString()
+        dialogBuilder.setPositiveButton("Сохранить", null)
+        dialogBuilder.setNegativeButton("Отмена", null)
 
-            // Вызов API с новыми параметрами
-            updateUser(user.user_id, newName, newEmail, newLogin, newPassword, newPhoneNumber, newRole)
+        val dialog = dialogBuilder.create()
+
+        dialog.setOnShowListener {
+            val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            saveButton.isEnabled = false
+
+            val mandatoryFields = listOf(nameEditText, loginEditText, emailEditText, roleEditText)
+
+            val watcher = object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    val allMandatoryFieldsFilled = mandatoryFields.all { it.text.isNotBlank() }
+                    saveButton.isEnabled = allMandatoryFieldsFilled
+
+                    if (!allMandatoryFieldsFilled) {
+                        warningTextView.visibility = View.VISIBLE
+                        warningTextView.text = "Все обязательные поля должны быть заполнены."
+                    } else {
+                        warningTextView.visibility = View.GONE
+                    }
+                }
+                override fun afterTextChanged(s: Editable?) {}
+            }
+
+            mandatoryFields.forEach { it.addTextChangedListener(watcher) }
+
+            saveButton.setOnClickListener {
+                val newName = nameEditText.text.toString()
+                val newLogin = loginEditText.text.toString()
+                val newEmail = emailEditText.text.toString()
+                val newPassword = passwordEditText.text.toString().takeIf { it.isNotBlank() }
+                val newPhoneNumber = phoneNumberEditText.text.toString().takeIf { it.isNotBlank() }
+                val newRole = roleEditText.text.toString()
+
+                Log.d("TableAdapter", "Updating user: id=$user.user_id, name=$newName, login=$newLogin, email=$newEmail, password=$newPassword, phone=$newPhoneNumber, role=$newRole")
+                updateUser(user.user_id, newName, newEmail, newLogin, newPassword, newPhoneNumber, newRole)
+                hideKeyboard(dialogView)
+                dialog.dismiss()
+            }
+
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener {
+                hideKeyboard(dialogView)
+                dialog.dismiss()
+            }
         }
 
-        dialog.setNegativeButton("Отмена", null)
-        dialog.create().show()
+        dialog.show()
     }
 
-    private fun updateUser(user_id: Int, user_name: String, email: String, login: String, password: String, phone_number: String?, role: String) {
+    private fun hideKeyboard(view: View) {
+        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
 
-        val apiService = RetrofitClient.apiService
-
-        val updatedUser = User(user_id = user_id, user_name = user_name, email = email, login = login, password = password, phone_number = phone_number, role = role)
-
+    private fun updateUser(user_id: Int, user_name: String, email: String, login: String, password: String?, phone_number: String?, role: String) {
+        val apiService = RetrofitClient.getApiService(context)
+        val updatedUser = User(
+            user_id = user_id,
+            user_name = user_name,
+            email = email,
+            login = login,
+            password = password,
+            phone_number = phone_number,
+            role = role
+        )
+        Log.d("TableAdapter", "Sending PUT request: $updatedUser")
         val call = apiService.updateUser(user_id, updatedUser)
-
         call.enqueue(object : Callback<User> {
             override fun onResponse(call: Call<User>, response: Response<User>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "User updated successfully", Toast.LENGTH_SHORT).show()
-                    fetchUsersAndUpdateTable() // Обновляем таблицу
+                    fetchUsersAndUpdateTable()
                 } else {
-                    Toast.makeText(context, "Failed to update user", Toast.LENGTH_SHORT).show()
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("TableAdapter", "Failed to update user: ${response.code()} - $errorBody")
+                    Toast.makeText(context, "Failed to update user: $errorBody", Toast.LENGTH_LONG).show()
                 }
             }
-
             override fun onFailure(call: Call<User>, t: Throwable) {
+                Log.e("TableAdapter", "Error: ${t.message}")
                 Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
@@ -500,7 +638,7 @@ class TableAdapter<T>(
     }
 
     private fun updateShipment(shipmentId: Int, quantity: Int, date: String, userId: Int) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         val updatedShipment = Shipment(shipmentId, quantity, date, userId)
 
         apiService.updateShipment(shipmentId, updatedShipment).enqueue(object : Callback<Shipment> {
@@ -561,7 +699,7 @@ class TableAdapter<T>(
     }
 
     private fun updateProduct(productId: Int, name: String, expireDate: String, type: String, manufacturer: String, weight: Double, shipment: Int, writeOff: Int?, extradition: Int?) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         val updatedProduct = Product(productId, name, expireDate, type, manufacturer, weight, shipment, writeOff, extradition)
 
         apiService.updateProduct(productId, updatedProduct).enqueue(object : Callback<Product> {
@@ -612,7 +750,7 @@ class TableAdapter<T>(
         dialog.create().show()
     }
     private fun updateWriteOffProducts(writeOffProduct: WriteOffOfProducts) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         apiService.updateWriteOffProduct(writeOffProduct.id_product_write_off, writeOffProduct)
             .enqueue(object : Callback<WriteOffOfProducts> {
                 override fun onResponse(
@@ -663,7 +801,7 @@ class TableAdapter<T>(
 
 
     private fun updateExtradition(extradition: Extradition) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         apiService.updateExtradition(extradition.extradition_id, extradition)
             .enqueue(object : Callback<Extradition> {
                 override fun onResponse(call: Call<Extradition>, response: Response<Extradition>) {
@@ -706,7 +844,7 @@ class TableAdapter<T>(
     }
 
     private fun updateProductsCurrentQuantity(id: Int, quantity: Int, product: Int) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         val updatedItem = ProductsCurrentQuantity(product_current_quantity_id = id, quantity = quantity, product = product)
 
         apiService.updateProductsCurrentQuantity(id, updatedItem).enqueue(object : Callback<ProductsCurrentQuantity> {
@@ -730,7 +868,7 @@ class TableAdapter<T>(
 
     // УДАЛЕНИЕ пошло
     private fun deleteProduct(productId: Int) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.deleteProduct(productId).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
@@ -752,7 +890,7 @@ class TableAdapter<T>(
 
 
     private fun deleteShipment(shipmentId: Int) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.deleteShipment(shipmentId).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
@@ -776,7 +914,7 @@ class TableAdapter<T>(
 
 
     private fun deleteUser(userId: Int) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.deleteUser(userId).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
@@ -796,7 +934,7 @@ class TableAdapter<T>(
 
 
     private fun deleteWriteOffOfProducts(writeOffId: Int) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.deleteWriteOffOfProducts(writeOffId).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
@@ -815,7 +953,7 @@ class TableAdapter<T>(
     }
 
     private fun deleteExtradition(extraditionId: Int) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.deleteExtradition(extraditionId).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
@@ -834,7 +972,7 @@ class TableAdapter<T>(
     }
 
     private fun deleteProductsCurrentQuantity(productsCurrentQuantityId: Int) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.deleteProductsCurrentQuantity(productsCurrentQuantityId).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
@@ -872,18 +1010,17 @@ class TableAdapter<T>(
 
         warningTextView.visibility = View.GONE
 
-        dialogBuilder.setPositiveButton("Save", null) // Кнопка без Listener, Listener будет добавлен позже.
+        dialogBuilder.setPositiveButton("Save", null)
         dialogBuilder.setNegativeButton("Cancel", null)
 
         val dialog = dialogBuilder.create()
 
         dialog.setOnShowListener {
             val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            saveButton.isEnabled = false // Изначально отключена.
+            saveButton.isEnabled = false
 
-            val textFields = listOf(nameEditText, loginEditText, emailEditText, passwordEditText, phoneNumberEditText, roleEditText)
+            val textFields = listOf(nameEditText, loginEditText, emailEditText, passwordEditText, roleEditText)
 
-            // Добавляем TextWatcher для проверки заполненности всех полей.
             val watcher = object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -892,29 +1029,55 @@ class TableAdapter<T>(
 
                     if (!allFieldsFilled) {
                         warningTextView.visibility = View.VISIBLE
-                        warningTextView.text = "Все поля должны быть заполнены."
+                        warningTextView.text = "Все обязательные поля должны быть заполнены."
                     } else {
                         warningTextView.visibility = View.GONE
                     }
                 }
-
                 override fun afterTextChanged(s: Editable?) {}
             }
 
-            // Добавляем TextWatcher ко всем полям.
             textFields.forEach { it.addTextChangedListener(watcher) }
 
             saveButton.setOnClickListener {
+                val name = nameEditText.text.toString()
+                val login = loginEditText.text.toString()
+                val email = emailEditText.text.toString()
+                val password = passwordEditText.text.toString()
+                val phoneNumber = phoneNumberEditText.text.toString().takeIf { it.isNotBlank() }
+                val role = roleEditText.text.toString()
+
+                // Валидация email
+                if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                    warningTextView.visibility = View.VISIBLE
+                    warningTextView.text = "Неверный формат email."
+                    return@setOnClickListener
+                }
+
+                // Валидация на HTML-теги
+                if (name.contains("<") || login.contains("<") || role.contains("<")) {
+                    warningTextView.visibility = View.VISIBLE
+                    warningTextView.text = "Поля не должны содержать HTML-теги."
+                    return@setOnClickListener
+                }
+
                 val newUser = User(
-                    user_id = 0,  // ID будет присвоен автоматически
-                    user_name = nameEditText.text.toString(),
-                    login = loginEditText.text.toString(),
-                    email = emailEditText.text.toString(),
-                    password = passwordEditText.text.toString(),
-                    phone_number = phoneNumberEditText.text.toString(),
-                    role = roleEditText.text.toString()
+                    user_id = 0,
+                    user_name = name,
+                    login = login,
+                    email = email,
+                    password = password,
+                    phone_number = phoneNumber,
+                    role = role
                 )
+                Log.d("TableAdapter", "Adding user: $newUser")
                 addUser(newUser)
+                hideKeyboard(dialogView)
+                dialog.dismiss()
+            }
+
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener {
+                hideKeyboard(dialogView)
                 dialog.dismiss()
             }
         }
@@ -926,18 +1089,21 @@ class TableAdapter<T>(
 
 
     private fun addUser(user: User) {
-        val apiService = RetrofitClient.apiService
+        Log.d("TableAdapter", "Sending POST request: $user")
+        val apiService = RetrofitClient.getApiService(context)
         apiService.addUser(user).enqueue(object : Callback<User> {
             override fun onResponse(call: Call<User>, response: Response<User>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "User added successfully", Toast.LENGTH_SHORT).show()
-                    fetchUsersAndUpdateTable() // Обновляем таблицу после добавления
+                    fetchUsersAndUpdateTable()
                 } else {
-                    Toast.makeText(context, "Failed to add user", Toast.LENGTH_SHORT).show()
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("TableAdapter", "Failed to add user: ${response.code()} - $errorBody")
+                    Toast.makeText(context, "Failed to add user: $errorBody", Toast.LENGTH_LONG).show()
                 }
             }
-
             override fun onFailure(call: Call<User>, t: Throwable) {
+                Log.e("TableAdapter", "Error: ${t.message}")
                 Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
@@ -1015,7 +1181,7 @@ class TableAdapter<T>(
 
 
     private fun addProduct(product: Product) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         apiService.addProduct(product).enqueue(object : Callback<Product> {
             override fun onResponse(call: Call<Product>, response: Response<Product>) {
                 if (response.isSuccessful) {
@@ -1093,7 +1259,7 @@ class TableAdapter<T>(
 
     // Метод для добавления новой записи Shipment через API
     private fun addShipment(shipment: Shipment) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         apiService.addShipment(shipment).enqueue(object : Callback<Shipment> {
             override fun onResponse(call: Call<Shipment>, response: Response<Shipment>) {
                 if (response.isSuccessful) {
@@ -1172,7 +1338,7 @@ class TableAdapter<T>(
     }
 
     private fun addWriteOffProduct(writeOffProduct: WriteOffOfProducts) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         apiService.addWriteOffProduct(writeOffProduct).enqueue(object : Callback<WriteOffOfProducts> {
             override fun onResponse(call: Call<WriteOffOfProducts>, response: Response<WriteOffOfProducts>) {
                 if (response.isSuccessful) {
@@ -1245,7 +1411,7 @@ class TableAdapter<T>(
     }
 
     private fun addProductsCurrentQuantity(productsCurrentQuantity: ProductsCurrentQuantity) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         apiService.addProductsCurrentQuantity(productsCurrentQuantity).enqueue(object : Callback<ProductsCurrentQuantity> {
             override fun onResponse(call: Call<ProductsCurrentQuantity>, response: Response<ProductsCurrentQuantity>) {
                 if (response.isSuccessful) {
@@ -1321,7 +1487,7 @@ class TableAdapter<T>(
 
 
     private fun addExtradition(extradition: Extradition) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         apiService.addExtradition(extradition).enqueue(object : Callback<Extradition> {
             override fun onResponse(call: Call<Extradition>, response: Response<Extradition>) {
                 if (response.isSuccessful) {
@@ -1338,6 +1504,10 @@ class TableAdapter<T>(
         })
     }
 
+    private fun getCurrentUserRole(): String? {
+        val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("user_role", null)
+    }
 }
 
 

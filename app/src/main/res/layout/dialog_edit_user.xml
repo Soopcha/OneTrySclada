@@ -5,79 +5,70 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Поле для ввода имени пользователя -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Имя" />
-
     <EditText
         android:id="@+id/edit_user_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Введите имя" />
-
-    <!-- Поле для ввода логина пользователя -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Логин" />
+        android:minHeight="48dp"
+        android:hint="Name"
+        android:inputType="textPersonName"
+        android:focusable="true"
+        android:focusableInTouchMode="true" />
 
     <EditText
         android:id="@+id/edit_user_login"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Введите логин" />
-
-    <!-- Поле для ввода email пользователя -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Email" />
+        android:minHeight="48dp"
+        android:hint="Login"
+        android:inputType="text"
+        android:focusable="true"
+        android:focusableInTouchMode="true" />
 
     <EditText
         android:id="@+id/edit_user_email"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Введите email" />
-
-
-    <!-- Поле для ввода пароля пользователя -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Пароль" />
+        android:minHeight="48dp"
+        android:hint="Email"
+        android:inputType="textEmailAddress"
+        android:focusable="true"
+        android:focusableInTouchMode="true" />
 
     <EditText
         android:id="@+id/edit_user_password"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Введите пароль"
-        android:inputType="textPassword" />
-
-    <!-- Поле для ввода номера телефона пользователя -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Номер телефона" />
+        android:minHeight="48dp"
+        android:hint="New Password (optional)"
+        android:inputType="textPassword"
+        android:focusable="true"
+        android:focusableInTouchMode="true" />
 
     <EditText
         android:id="@+id/edit_user_phone_number"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Введите номер телефона"
-        android:inputType="phone" />
-
-    <!-- Поле для ввода роли пользователя -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Роль" />
+        android:minHeight="48dp"
+        android:hint="Phone Number"
+        android:inputType="phone"
+        android:focusable="true"
+        android:focusableInTouchMode="true" />
 
     <EditText
         android:id="@+id/edit_user_role"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Введите роль" />
+        android:minHeight="48dp"
+        android:hint="Role"
+        android:inputType="text"
+        android:focusable="true"
+        android:focusableInTouchMode="true" />
+
+    <TextView
+        android:id="@+id/warning_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
 
 </LinearLayout>
