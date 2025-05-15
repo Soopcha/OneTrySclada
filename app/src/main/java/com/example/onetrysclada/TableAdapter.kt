@@ -12,6 +12,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TableLayout
 import android.widget.TableRow
 import android.widget.TextView
@@ -49,7 +52,6 @@ class TableAdapter<T>(
                 headerRow.addView(createTextView("ID"))
                 headerRow.addView(createTextView("Name"))
                 headerRow.addView(createTextView("Login"))
-                headerRow.addView(createTextView("Password"))
                 headerRow.addView(createTextView("Email"))
                 headerRow.addView(createTextView("Phone Number"))
                 headerRow.addView(createTextView("Role"))
@@ -105,11 +107,11 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.phone_number ?: ""))
                     row.addView(createTextView(item.role))
 
-                    val editButton = createEditButton("Edit") { openEditUserDialog(item) }
-                    row.addView(editButton)
-
-                    val deleteButton = createDeleteButton("Delete") { deleteUser(item.user_id) }
-                    row.addView(deleteButton)
+                    // Добавляем ячейку с иконками действий
+                    row.addView(createActionCell(
+                        onEditClick = { openEditUserDialog(item) },
+                        onDeleteClick = { deleteUser(item.user_id) }
+                    ))
                 }
 
                 is Shipment -> {
@@ -118,13 +120,10 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.date_of_shipment))
                     row.addView(createTextView(item.user.toString()))
 
-                    val editButton = createEditButton("Edit") { openEditShipmentDialog(item) }
-                    row.addView(editButton)
-                //раньше было item.user.user_id и обращение уже к юзеру но что-то не работало так
-
-                    // Добавляем кнопку удаления
-                    val deleteButton = createDeleteButton("Delete") { deleteShipment(item.shipment_id) }
-                    row.addView(deleteButton)
+                    row.addView(createActionCell(
+                        onEditClick = { openEditShipmentDialog(item) },
+                        onDeleteClick = { deleteShipment(item.shipment_id) }
+                    ))
 
                 }
                 is Product -> {
@@ -139,11 +138,10 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.write_off_of_products?.toString() ?: "N/A"))
                     row.addView(createTextView(item.extradition?.toString() ?: "N/A"))
 
-                    val editButton = createEditButton("Edit") { openEditProductDialog(item) }
-                    row.addView(editButton)
-
-                    val deleteButton = createDeleteButton("Delete") { deleteProduct(item.product_id) }
-                    row.addView(deleteButton)
+                    row.addView(createActionCell(
+                        onEditClick = { openEditProductDialog(item) },
+                        onDeleteClick = { deleteProduct(item.product_id) }
+                    ))
                 }
                 is WriteOffOfProducts -> {
                     row.addView(createTextView(item.id_product_write_off.toString()))
@@ -152,12 +150,10 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.reason))
                     row.addView(createTextView(item.user.toString()))
 
-                    val editButton = createEditButton("Edit") { openEditWriteOffProductsDialog(item) }
-                    row.addView(editButton)
-
-                    // Кнопка удаления для WriteOffOfProducts
-                    val deleteButton = createDeleteButton("Delete") { deleteWriteOffOfProducts(item.id_product_write_off) }
-                    row.addView(deleteButton)
+                    row.addView(createActionCell(
+                        onEditClick = { openEditWriteOffProductsDialog(item) },
+                        onDeleteClick = { deleteWriteOffOfProducts(item.id_product_write_off) }
+                    ))
                 }
                 is Extradition -> {
                     row.addView(createTextView(item.extradition_id.toString()))
@@ -165,12 +161,10 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.quantity.toString()))
                     row.addView(createTextView(item.user.toString()))
 
-                    val editButton = createEditButton("Edit") { openEditExtraditionDialog(item) }
-                    row.addView(editButton)
-
-                    // Кнопка удаления для Extradition
-                    val deleteButton = createDeleteButton("Delete") { deleteExtradition(item.extradition_id) }
-                    row.addView(deleteButton)
+                    row.addView(createActionCell(
+                        onEditClick = { openEditExtraditionDialog(item) },
+                        onDeleteClick = { deleteExtradition(item.extradition_id) }
+                    ))
                 }
                 is ProductsCurrentQuantity -> {
 
@@ -180,13 +174,10 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.quantity.toString()))
                     row.addView(createTextView(item.product.toString()))
 
-                    // Кнопка редактирования
-                    val editButton = createEditButton("Edit") { openEditProductsCurrentQuantityDialog(item) }
-                    row.addView(editButton)
-
-                    // Кнопка удаления для ProductsCurrentQuantity
-                    val deleteButton = createDeleteButton("Delete") { deleteProductsCurrentQuantity(item.product_current_quantity_id) }
-                    row.addView(deleteButton)
+                    row.addView(createActionCell(
+                        onEditClick = { openEditProductsCurrentQuantityDialog(item) },
+                        onDeleteClick = { deleteProductsCurrentQuantity(item.product_current_quantity_id) }
+                    ))
 
 //                    // Логирование ошибок, если данные пустые или невалидные
 //                    if (item.product_current_quantity_id == null) {
@@ -230,38 +221,59 @@ class TableAdapter<T>(
         tableLayout.addView(addButton)
     }
 
-    private fun createTextView(text: String): TextView {
+    private fun createTextView(text: String, isHeader: Boolean = false): TextView {
         return TextView(context).apply {
             this.text = text
             setPadding(16, 16, 16, 16)
-            setBackgroundColor(Color.LTGRAY) // Добавьте для отладки
-            setTextColor(Color.BLACK) // Устанавливаем черный цвет текста
+            setBackgroundColor(if (isHeader) Color.DKGRAY else Color.LTGRAY)
+            setTextColor(Color.BLACK)
             layoutParams = TableRow.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            )
+            ).apply {
+                minimumWidth = 150
+            }
+            if (isHeader) {
+                setTypeface(null, android.graphics.Typeface.BOLD)
+            }
+            maxLines = 2
+            ellipsize = android.text.TextUtils.TruncateAt.END
         }
     }
 
-    private fun createEditButton(text: String, onClick: () -> Unit): Button {
-        return Button(context).apply {
-            this.text = text
-            setOnClickListener { onClick() }
+    private fun createActionCell(onEditClick: () -> Unit, onDeleteClick: () -> Unit): LinearLayout {
+        return LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
             layoutParams = TableRow.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { marginStart = 16 }
-        }
-    }
+            ).apply {
+                marginStart = 16
+            }
 
-    private fun createDeleteButton(text: String, onClick: () -> Unit): Button {
-        return Button(context).apply {
-            this.text = text
-            setOnClickListener { onClick() }
-            layoutParams = TableRow.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { marginStart = 16 }
+            // Кнопка "Редактировать" (карандаш)
+            addView(ImageButton(context).apply {
+                setImageResource(R.drawable.edit1) // Укажи свой drawable
+                setBackgroundColor(Color.TRANSPARENT)
+                contentDescription = "Edit"
+                layoutParams = LinearLayout.LayoutParams(48, 48).apply {
+                    marginEnd = 8
+                }
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                setPadding(8, 8, 8, 8)
+                setOnClickListener { onEditClick() }
+            })
+
+            // Кнопка "Удалить" (крестик)
+            addView(ImageButton(context).apply {
+                setImageResource(R.drawable.delete1) // Укажи свой drawable
+                setBackgroundColor(Color.TRANSPARENT)
+                contentDescription = "Delete"
+                layoutParams = LinearLayout.LayoutParams(48, 48)
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                setPadding(8, 8, 8, 8)
+                setOnClickListener { onDeleteClick() }
+            })
         }
     }
 

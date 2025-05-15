@@ -96,6 +96,7 @@
         android:layout_height="wrap_content"
         android:text="Выйти"
         android:layout_marginTop="8dp"
+        android:backgroundTint="#9D4545"
         app:layout_constraintTop_toBottomOf="@id/buttons_container"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -170,7 +171,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:stretchColumns="*"
-                android:shrinkColumns="*"
                 android:layout_gravity="start" />
         </HorizontalScrollView>
     </ScrollView>
