@@ -109,11 +109,23 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.phone_number ?: ""))
                     row.addView(createTextView(item.role))
 
-                    // Добавляем ячейку с иконками действий
-                    row.addView(createActionCell(
-                        onEditClick = { openEditUserDialog(item) },
-                        onDeleteClick = { deleteUser(item.user_id) }
-                    ))
+                    // Добавляем ячейку с иконками действий только для админов
+                    if (getCurrentUserRole() == "admin") {
+                        row.addView(createActionCell(
+                            onEditClick = { openEditUserDialog(item) },
+                            onDeleteClick = { deleteUser(item.user_id) }
+                        ))
+                    } else {
+                        // Добавляем пустую ячейку для сохранения выравнивания
+                        row.addView(LinearLayout(context).apply {
+                            layoutParams = TableRow.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                marginStart = 16
+                            }
+                        })
+                    }
                 }
 
                 is Shipment -> {
@@ -122,10 +134,22 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.date_of_shipment))
                     row.addView(createTextView(item.user.toString()))
 
-                    row.addView(createActionCell(
-                        onEditClick = { openEditShipmentDialog(item) },
-                        onDeleteClick = { deleteShipment(item.shipment_id) }
-                    ))
+                    if (getCurrentUserRole() == "admin") {
+                        row.addView(createActionCell(
+                            onEditClick = { openEditShipmentDialog(item) },
+                            onDeleteClick = { deleteShipment(item.shipment_id) }
+                        ))
+                    } else {
+                        // Добавляем пустую ячейку для сохранения выравнивания
+                        row.addView(LinearLayout(context).apply {
+                            layoutParams = TableRow.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                marginStart = 16
+                            }
+                        })
+                    }
 
                 }
                 is Product -> {
@@ -140,10 +164,22 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.write_off_of_products?.toString() ?: "N/A"))
                     row.addView(createTextView(item.extradition?.toString() ?: "N/A"))
 
-                    row.addView(createActionCell(
-                        onEditClick = { openEditProductDialog(item) },
-                        onDeleteClick = { deleteProduct(item.product_id) }
-                    ))
+                    if (getCurrentUserRole() == "admin") {
+                        row.addView(createActionCell(
+                            onEditClick = { openEditProductDialog(item) },
+                            onDeleteClick = { deleteProduct(item.product_id) }
+                        ))
+                    } else {
+                        // Добавляем пустую ячейку для сохранения выравнивания
+                        row.addView(LinearLayout(context).apply {
+                            layoutParams = TableRow.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                marginStart = 16
+                            }
+                        })
+                    }
                 }
                 is WriteOffOfProducts -> {
                     row.addView(createTextView(item.id_product_write_off.toString()))
@@ -152,10 +188,24 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.reason))
                     row.addView(createTextView(item.user.toString()))
 
-                    row.addView(createActionCell(
-                        onEditClick = { openEditWriteOffProductsDialog(item) },
-                        onDeleteClick = { deleteWriteOffOfProducts(item.id_product_write_off) }
-                    ))
+
+
+                    if (getCurrentUserRole() == "admin") {
+                        row.addView(createActionCell(
+                            onEditClick = { openEditWriteOffProductsDialog(item) },
+                            onDeleteClick = { deleteWriteOffOfProducts(item.id_product_write_off) }
+                        ))
+                    } else {
+                        // Добавляем пустую ячейку для сохранения выравнивания
+                        row.addView(LinearLayout(context).apply {
+                            layoutParams = TableRow.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                marginStart = 16
+                            }
+                        })
+                    }
                 }
                 is Extradition -> {
                     row.addView(createTextView(item.extradition_id.toString()))
@@ -163,10 +213,24 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.quantity.toString()))
                     row.addView(createTextView(item.user.toString()))
 
-                    row.addView(createActionCell(
-                        onEditClick = { openEditExtraditionDialog(item) },
-                        onDeleteClick = { deleteExtradition(item.extradition_id) }
-                    ))
+
+
+                    if (getCurrentUserRole() == "admin") {
+                        row.addView(createActionCell(
+                            onEditClick = { openEditExtraditionDialog(item) },
+                            onDeleteClick = { deleteExtradition(item.extradition_id) }
+                        ))
+                    } else {
+                        // Добавляем пустую ячейку для сохранения выравнивания
+                        row.addView(LinearLayout(context).apply {
+                            layoutParams = TableRow.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                marginStart = 16
+                            }
+                        })
+                    }
                 }
                 is ProductsCurrentQuantity -> {
 
@@ -176,10 +240,23 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.quantity.toString()))
                     row.addView(createTextView(item.product.toString()))
 
-                    row.addView(createActionCell(
-                        onEditClick = { openEditProductsCurrentQuantityDialog(item) },
-                        onDeleteClick = { deleteProductsCurrentQuantity(item.product_current_quantity_id) }
-                    ))
+
+                    if (getCurrentUserRole() == "admin") {
+                        row.addView(createActionCell(
+                            onEditClick = { openEditProductsCurrentQuantityDialog(item) },
+                            onDeleteClick = { deleteProductsCurrentQuantity(item.product_current_quantity_id) }
+                        ))
+                    } else {
+                        // Добавляем пустую ячейку для сохранения выравнивания
+                        row.addView(LinearLayout(context).apply {
+                            layoutParams = TableRow.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                marginStart = 16
+                            }
+                        })
+                    }
 
 //                    // Логирование ошибок, если данные пустые или невалидные
 //                    if (item.product_current_quantity_id == null) {
@@ -194,15 +271,15 @@ class TableAdapter<T>(
             tableLayout.addView(row)
         }
 
-        // Добавляем нужную кнопку в зависимости от типа данных
-        when (dataType) {
-            "User" -> addButtonToTable("Add User") { openAddUserDialog() }
-            "Product" -> addButtonToTable("Add Product") { openAddProductDialog() }
-            "Shipment" -> addButtonToTable("Add Shipment") { openAddShipmentDialog() }
-            "WriteOffProducts" -> addButtonToTable("Add WriteOffProduct") { openAddWriteOffProductsDialog() }
-            "ProductsCurrentQuantity" -> addButtonToTable("Add ProductsCurrentQuantity") { openAddProductsCurrentQuantityDialog() }
-            "Extradition" -> addButtonToTable("Add Extradition") { openAddExtraditionDialog() }
-
+        if (getCurrentUserRole() == "admin") {
+            when (dataType) {
+                "User" -> addButtonToTable("Add User") { openAddUserDialog() }
+                "Product" -> addButtonToTable("Add Product") { openAddProductDialog() }
+                "Shipment" -> addButtonToTable("Add Shipment") { openAddShipmentDialog() }
+                "WriteOffProducts" -> addButtonToTable("Add WriteOffProduct") { openAddWriteOffProductsDialog() }
+                "ProductsCurrentQuantity" -> addButtonToTable("Add ProductsCurrentQuantity") { openAddProductsCurrentQuantityDialog() }
+                "Extradition" -> addButtonToTable("Add Extradition") { openAddExtraditionDialog() }
+            }
         }
 
     }
@@ -1427,6 +1504,10 @@ class TableAdapter<T>(
         })
     }
 
+    private fun getCurrentUserRole(): String? {
+        val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("user_role", null)
+    }
 }
 
 

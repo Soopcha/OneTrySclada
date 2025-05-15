@@ -81,12 +81,42 @@ class MainActivity : AppCompatActivity() {
                             if (token != null) {
                                 // Сохраняем токен
                                 RetrofitClient.saveToken(this@MainActivity, token)
-                                Toast.makeText(this@MainActivity, "Вход успешен!", Toast.LENGTH_SHORT).show()
 
-                                // Переходим на TableActivity
-                                val intent = Intent(this@MainActivity, TableActivity::class.java)
-                                startActivity(intent)
-                                finish() // Закрываем MainActivity
+                                // Запрашиваем профиль пользователя для получения роли
+                                RetrofitClient.getApiService(this@MainActivity).getProfile()
+                                    .enqueue(object : Callback<User> {
+                                        override fun onResponse(call: Call<User>, response: Response<User>) {
+                                            if (response.isSuccessful) {
+                                                val user = response.body()
+                                                if (user != null) {
+                                                    // Сохраняем роль в SharedPreferences
+                                                    val sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE)
+                                                    with(sharedPreferences.edit()) {
+                                                        putString("user_role", user.role)
+                                                        apply()
+                                                    }
+                                                    Log.d("MainActivity", "User role saved: ${user.role}")
+
+                                                    Toast.makeText(this@MainActivity, "Вход успешен!", Toast.LENGTH_SHORT).show()
+
+                                                    // Переходим на TableActivity
+                                                    val intent = Intent(this@MainActivity, TableActivity::class.java)
+                                                    startActivity(intent)
+                                                    finish() // Закрываем MainActivity
+                                                } else {
+                                                    Toast.makeText(this@MainActivity, "Ошибка: данные пользователя не получены", Toast.LENGTH_SHORT).show()
+                                                }
+                                            } else {
+                                                Toast.makeText(this@MainActivity, "Ошибка получения профиля: ${response.code()}", Toast.LENGTH_LONG).show()
+                                                Log.e("ProfileError", "Response: ${response.errorBody()?.string()}")
+                                            }
+                                        }
+
+                                        override fun onFailure(call: Call<User>, t: Throwable) {
+                                            Toast.makeText(this@MainActivity, "Ошибка сети при получении профиля: ${t.message}", Toast.LENGTH_LONG).show()
+                                            Log.e("ProfileError", "Failure: ${t.message}", t)
+                                        }
+                                    })
                             } else {
                                 Toast.makeText(this@MainActivity, "Ошибка: токен не получен", Toast.LENGTH_SHORT).show()
                             }
