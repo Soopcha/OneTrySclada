@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
@@ -26,6 +27,7 @@ import com.example.onetrysclada.data.models.Shipment
 import com.example.onetrysclada.data.models.User
 import com.example.onetrysclada.data.models.WriteOffOfProducts
 import com.example.onetrysclada.data.network.RetrofitClient
+import com.google.android.material.internal.ViewUtils.hideKeyboard
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -423,59 +425,109 @@ class TableAdapter<T>(
 
 
     private fun openEditUserDialog(user: User) {
-        val dialog = AlertDialog.Builder(context)
+        val dialogBuilder = AlertDialog.Builder(context)
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_user, null)
-        dialog.setView(dialogView)
+        dialogBuilder.setView(dialogView)
 
         val nameEditText = dialogView.findViewById<EditText>(R.id.edit_user_name)
         val loginEditText = dialogView.findViewById<EditText>(R.id.edit_user_login)
         val emailEditText = dialogView.findViewById<EditText>(R.id.edit_user_email)
-        //val passwordEditText =  dialogView.findViewById<EditText>(R.id.edit_user_password)
+        val passwordEditText = dialogView.findViewById<EditText>(R.id.edit_user_password)
         val phoneNumberEditText = dialogView.findViewById<EditText>(R.id.edit_user_phone_number)
         val roleEditText = dialogView.findViewById<EditText>(R.id.edit_user_role)
+        val warningTextView = dialogView.findViewById<TextView>(R.id.warning_text)
 
-        //записываем в поля что было до будущих изменений
+        warningTextView.visibility = View.GONE
+
         nameEditText.setText(user.user_name)
         loginEditText.setText(user.login)
         emailEditText.setText(user.email)
         phoneNumberEditText.setText(user.phone_number)
         roleEditText.setText(user.role)
 
-        dialog.setPositiveButton("Сохранить") { _, _ ->
-            val newName = nameEditText.text.toString()
-            val newLogin = loginEditText.text.toString()
-            val newEmail = emailEditText.text.toString()
-           // val newPassword = passwordEditText.text.toString()
-            val newPhoneNumber = phoneNumberEditText.text.toString()
-            val newRole = roleEditText.text.toString()
+        dialogBuilder.setPositiveButton("Сохранить", null)
+        dialogBuilder.setNegativeButton("Отмена", null)
 
-            // Вызов API с новыми параметрами
-            updateUser(user.user_id, newName, newEmail, newLogin, newPhoneNumber, newRole)
+        val dialog = dialogBuilder.create()
+
+        dialog.setOnShowListener {
+            val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            saveButton.isEnabled = false
+
+            val mandatoryFields = listOf(nameEditText, loginEditText, emailEditText, roleEditText)
+
+            val watcher = object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    val allMandatoryFieldsFilled = mandatoryFields.all { it.text.isNotBlank() }
+                    saveButton.isEnabled = allMandatoryFieldsFilled
+
+                    if (!allMandatoryFieldsFilled) {
+                        warningTextView.visibility = View.VISIBLE
+                        warningTextView.text = "Все обязательные поля должны быть заполнены."
+                    } else {
+                        warningTextView.visibility = View.GONE
+                    }
+                }
+                override fun afterTextChanged(s: Editable?) {}
+            }
+
+            mandatoryFields.forEach { it.addTextChangedListener(watcher) }
+
+            saveButton.setOnClickListener {
+                val newName = nameEditText.text.toString()
+                val newLogin = loginEditText.text.toString()
+                val newEmail = emailEditText.text.toString()
+                val newPassword = passwordEditText.text.toString().takeIf { it.isNotBlank() }
+                val newPhoneNumber = phoneNumberEditText.text.toString().takeIf { it.isNotBlank() }
+                val newRole = roleEditText.text.toString()
+
+                Log.d("TableAdapter", "Updating user: id=$user.user_id, name=$newName, login=$newLogin, email=$newEmail, password=$newPassword, phone=$newPhoneNumber, role=$newRole")
+                updateUser(user.user_id, newName, newEmail, newLogin, newPassword, newPhoneNumber, newRole)
+                hideKeyboard(dialogView)
+                dialog.dismiss()
+            }
+
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener {
+                hideKeyboard(dialogView)
+                dialog.dismiss()
+            }
         }
 
-        dialog.setNegativeButton("Отмена", null)
-        dialog.create().show()
+        dialog.show()
     }
 
-    private fun updateUser(user_id: Int, user_name: String, email: String, login: String, phone_number: String?, role: String) {
+    private fun hideKeyboard(view: View) {
+        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
 
+    private fun updateUser(user_id: Int, user_name: String, email: String, login: String, password: String?, phone_number: String?, role: String) {
         val apiService = RetrofitClient.getApiService(context)
-
-        val updatedUser = User(user_id = user_id, user_name = user_name, email = email, login = login, phone_number = phone_number, role = role)
-
+        val updatedUser = User(
+            user_id = user_id,
+            user_name = user_name,
+            email = email,
+            login = login,
+            password = password,
+            phone_number = phone_number,
+            role = role
+        )
+        Log.d("TableAdapter", "Sending PUT request: $updatedUser")
         val call = apiService.updateUser(user_id, updatedUser)
-
         call.enqueue(object : Callback<User> {
             override fun onResponse(call: Call<User>, response: Response<User>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "User updated successfully", Toast.LENGTH_SHORT).show()
-                    fetchUsersAndUpdateTable() // Обновляем таблицу
+                    fetchUsersAndUpdateTable()
                 } else {
-                    Toast.makeText(context, "Failed to update user", Toast.LENGTH_SHORT).show()
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("TableAdapter", "Failed to update user: ${response.code()} - $errorBody")
+                    Toast.makeText(context, "Failed to update user: $errorBody", Toast.LENGTH_LONG).show()
                 }
             }
-
             override fun onFailure(call: Call<User>, t: Throwable) {
+                Log.e("TableAdapter", "Error: ${t.message}")
                 Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
@@ -874,6 +926,7 @@ class TableAdapter<T>(
         val nameEditText = dialogView.findViewById<EditText>(R.id.edit_user_name)
         val loginEditText = dialogView.findViewById<EditText>(R.id.edit_user_login)
         val emailEditText = dialogView.findViewById<EditText>(R.id.edit_user_email)
+        val passwordEditText = dialogView.findViewById<EditText>(R.id.edit_user_password)
         val phoneNumberEditText = dialogView.findViewById<EditText>(R.id.edit_user_phone_number)
         val roleEditText = dialogView.findViewById<EditText>(R.id.edit_user_role)
         val warningTextView = dialogView.findViewById<TextView>(R.id.warning_text)
@@ -889,7 +942,7 @@ class TableAdapter<T>(
             val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
             saveButton.isEnabled = false
 
-            val textFields = listOf(nameEditText, loginEditText, emailEditText, roleEditText)
+            val textFields = listOf(nameEditText, loginEditText, emailEditText, passwordEditText, roleEditText)
 
             val watcher = object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -899,27 +952,55 @@ class TableAdapter<T>(
 
                     if (!allFieldsFilled) {
                         warningTextView.visibility = View.VISIBLE
-                        warningTextView.text = "Все поля должны быть заполнены."
+                        warningTextView.text = "Все обязательные поля должны быть заполнены."
                     } else {
                         warningTextView.visibility = View.GONE
                     }
                 }
-
                 override fun afterTextChanged(s: Editable?) {}
             }
 
             textFields.forEach { it.addTextChangedListener(watcher) }
 
             saveButton.setOnClickListener {
+                val name = nameEditText.text.toString()
+                val login = loginEditText.text.toString()
+                val email = emailEditText.text.toString()
+                val password = passwordEditText.text.toString()
+                val phoneNumber = phoneNumberEditText.text.toString().takeIf { it.isNotBlank() }
+                val role = roleEditText.text.toString()
+
+                // Валидация email
+                if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                    warningTextView.visibility = View.VISIBLE
+                    warningTextView.text = "Неверный формат email."
+                    return@setOnClickListener
+                }
+
+                // Валидация на HTML-теги
+                if (name.contains("<") || login.contains("<") || role.contains("<")) {
+                    warningTextView.visibility = View.VISIBLE
+                    warningTextView.text = "Поля не должны содержать HTML-теги."
+                    return@setOnClickListener
+                }
+
                 val newUser = User(
                     user_id = 0,
-                    user_name = nameEditText.text.toString(),
-                    login = loginEditText.text.toString(),
-                    email = emailEditText.text.toString(),
-                    phone_number = phoneNumberEditText.text.toString().takeIf { it.isNotBlank() },
-                    role = roleEditText.text.toString()
+                    user_name = name,
+                    login = login,
+                    email = email,
+                    password = password,
+                    phone_number = phoneNumber,
+                    role = role
                 )
+                Log.d("TableAdapter", "Adding user: $newUser")
                 addUser(newUser)
+                hideKeyboard(dialogView)
+                dialog.dismiss()
+            }
+
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener {
+                hideKeyboard(dialogView)
                 dialog.dismiss()
             }
         }
@@ -931,18 +1012,21 @@ class TableAdapter<T>(
 
 
     private fun addUser(user: User) {
+        Log.d("TableAdapter", "Sending POST request: $user")
         val apiService = RetrofitClient.getApiService(context)
         apiService.addUser(user).enqueue(object : Callback<User> {
             override fun onResponse(call: Call<User>, response: Response<User>) {
                 if (response.isSuccessful) {
                     Toast.makeText(context, "User added successfully", Toast.LENGTH_SHORT).show()
-                    fetchUsersAndUpdateTable() // Обновляем таблицу после добавления
+                    fetchUsersAndUpdateTable()
                 } else {
-                    Toast.makeText(context, "Failed to add user", Toast.LENGTH_SHORT).show()
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("TableAdapter", "Failed to add user: ${response.code()} - $errorBody")
+                    Toast.makeText(context, "Failed to add user: $errorBody", Toast.LENGTH_LONG).show()
                 }
             }
-
             override fun onFailure(call: Call<User>, t: Throwable) {
+                Log.e("TableAdapter", "Error: ${t.message}")
                 Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
