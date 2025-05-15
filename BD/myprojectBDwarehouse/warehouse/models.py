@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 
 # Create your models here.
@@ -6,14 +7,47 @@ from django.db import models
 # "многие к одному" со стороны той модели, где стоит ForeignKey, и "один ко многим" со стороны связанной модели
 # бывает что ошибка тогда надо почистить все миграции и удалить таблицу мб прошлую? или не надо
 
-class User(models.Model):
-    user_id = models.AutoField(primary_key=True)  # Первичный ключ
+class CustomUserManager(UserManager):
+    def _create_user(self, login, password, **extra_fields):
+        """
+        Переопределяем базовый метод, чтобы использовать login вместо username.
+        """
+        if not login:
+            raise ValueError('The Login field must be set')
+        extra_fields.setdefault('username', None)  # Устанавливаем username как None
+        user = self.model(login=login, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_user(self, login, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        return self._create_user(login, password, **extra_fields)
+
+    def create_superuser(self, login, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('role', 'admin')  # Автоматически устанавливаем role=admin для суперпользователя
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+        return self._create_user(login, password, **extra_fields)
+
+class User(AbstractUser):
+    user_id = models.AutoField(primary_key=True)
     user_name = models.CharField(max_length=100, null=False)
     email = models.EmailField(null=False)
-    login = models.CharField(max_length=100, unique=True, null=False)  # Логин пользователя, уникальный
-    password = models.CharField(max_length=128, null=False)  # Пароль (обычно хранят в хэшированном виде)
-    phone_number = models.CharField(max_length=15, null=True)  # Номер телефона, может быть пустым
-    role = models.CharField(max_length=50, null=False)  # Роль пользователя (например, 'admin', 'user')
+    login = models.CharField(max_length=100, unique=True, null=False)
+    phone_number = models.CharField(max_length=15, null=True)
+    role = models.CharField(max_length=50, null=False)
+    username = models.CharField(max_length=150, unique=True, null=True, blank=True)  # Необязательное поле
+
+    objects = CustomUserManager()  # Используем кастомный менеджер
+
+    USERNAME_FIELD = 'login'
+    REQUIRED_FIELDS = ['user_name', 'email', 'role']
 
     def __str__(self):
         return f"User {self.user_id} - {self.user_name}, Email: {self.email}"

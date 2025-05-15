@@ -39,7 +39,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'warehouse', #стр добавила
     'django_filters',
+    'rest_framework',
+    'rest_framework.authtoken',  #для токен-аутентификации
 ]
+
+# Указываем кастомную модель пользователя
+AUTH_USER_MODEL = 'warehouse.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -111,6 +116,16 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',               # Для поиска
         'rest_framework.filters.OrderingFilter',             # Для сортировки
     ],
+# Добавляем настройки аутентификации и разрешений
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',  # Для админки
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',  # По умолчанию доступ только аутентифицированным
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
 }
 
 

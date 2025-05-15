@@ -13,11 +13,40 @@ from rest_framework import serializers
 from .models import *
 
 class UserSerializer(serializers.ModelSerializer):
-#serializers.ModelSerializer — это упрощен класс сериализатора, который автоматически создает поля на основе модели.
     class Meta:
         model = User
-        fields = '__all__' #— указание, что нужно включить все поля модели.
-        # Можно также указать конкретные поля, например, fields = ['field1', 'field2'].
+        fields = ['user_id', 'user_name', 'email', 'login', 'phone_number', 'role', 'password']
+        extra_kwargs = {
+            'password': {'write_only': True},  # Пароль не возвращается в ответах
+        }
+
+    def create(self, validated_data):
+        """
+        Переопределяем метод create, чтобы хэшировать пароль при создании пользователя.
+        """
+        # Извлекаем пароль из данных
+        password = validated_data.pop('password', None)
+        # Создаём пользователя через create_user для корректного хэширования
+        user = User.objects.create_user(**validated_data)
+        if password:
+            user.set_password(password)  # Хэшируем пароль
+            user.save()  # Сохраняем изменения
+        return user
+
+    def update(self, instance, validated_data):
+        """
+        Переопределяем метод update, чтобы хэшировать пароль при обновлении.
+        """
+        # Извлекаем пароль из данных, если он есть
+        password = validated_data.pop('password', None)
+        # Обновляем остальные поля
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        # Если передан новый пароль, хэшируем его
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
 
 class ShipmentSerializer(serializers.ModelSerializer):
     class Meta:

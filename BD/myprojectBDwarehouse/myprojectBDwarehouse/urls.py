@@ -20,7 +20,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from warehouse.views import UserViewSet, ShipmentViewSet, ProductViewSet, WriteOffOfProductsViewSet, ExtraditionViewSet, ProductsCurrentQuantityViewSet
 
-
+from warehouse.login_logout import LoginView, LogoutView, ProfileView
 
 # Создаем роутер и регистрируем ViewSet-ы
 router = DefaultRouter()
@@ -32,8 +32,11 @@ router.register(r'extraditions', ExtraditionViewSet)
 router.register(r'products-current-quantity', ProductsCurrentQuantityViewSet)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/', include(router.urls)),  # Добавляем пути роутера под /api/
+    path('admin/', admin.site.urls),  # Админка
+    path('api/', include(router.urls)),  # API для CRUD
+    path('api/login/', LoginView.as_view(), name='login'),
+    path('api/logout/', LogoutView.as_view(), name='logout'),
+    path('api/profile/', ProfileView.as_view(), name='profile'),
 ]
 
 #urlpatterns = [
