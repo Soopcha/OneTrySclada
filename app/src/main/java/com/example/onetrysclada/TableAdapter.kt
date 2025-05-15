@@ -101,7 +101,6 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.user_id.toString()))
                     row.addView(createTextView(item.user_name))
                     row.addView(createTextView(item.login))
-                    row.addView(createTextView(item.password))
                     row.addView(createTextView(item.email))
                     row.addView(createTextView(item.phone_number ?: ""))
                     row.addView(createTextView(item.role))
@@ -111,9 +110,8 @@ class TableAdapter<T>(
 
                     val deleteButton = createDeleteButton("Delete") { deleteUser(item.user_id) }
                     row.addView(deleteButton)
-
-
                 }
+
                 is Shipment -> {
                     row.addView(createTextView(item.shipment_id.toString()))
                     row.addView(createTextView(item.quantity.toString()))
@@ -268,7 +266,7 @@ class TableAdapter<T>(
     }
 
     private fun fetchProductsAndUpdateTable() {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.getProducts().enqueue(object : Callback<List<Product>> {
             override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
@@ -291,7 +289,7 @@ class TableAdapter<T>(
     }
 
     private fun fetchProductsCurrentQuantityAndUpdateTable() {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.getProductsCurrentQuantity().enqueue(object : Callback<List<ProductsCurrentQuantity>> {
             override fun onResponse(call: Call<List<ProductsCurrentQuantity>>, response: Response<List<ProductsCurrentQuantity>>) {
@@ -314,7 +312,7 @@ class TableAdapter<T>(
     }
 
     private fun fetchWriteOffProductsAndUpdateTable() {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         apiService.getWriteOffProducts().enqueue(object : Callback<List<WriteOffOfProducts>> {
             override fun onResponse(
                 call: Call<List<WriteOffOfProducts>>,
@@ -340,7 +338,7 @@ class TableAdapter<T>(
 
     // Функция для запроса данных Shipment и обновления таблицы
     private fun fetchShipmentsAndUpdateTable() {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.getShipments().enqueue(object : Callback<List<Shipment>> {
             override fun onResponse(call: Call<List<Shipment>>, response: Response<List<Shipment>>) {
@@ -364,7 +362,7 @@ class TableAdapter<T>(
     }
 
     private fun fetchUsersAndUpdateTable() {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.getUsers().enqueue(object : Callback<List<User>> {
             override fun onResponse(call: Call<List<User>>, response: Response<List<User>>) {
@@ -388,7 +386,7 @@ class TableAdapter<T>(
 
 
     private fun fetchExtraditionsAndUpdateTable() {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.getExtraditions().enqueue(object : Callback<List<Extradition>> {
             override fun onResponse(call: Call<List<Extradition>>, response: Response<List<Extradition>>) {
@@ -420,7 +418,7 @@ class TableAdapter<T>(
         val nameEditText = dialogView.findViewById<EditText>(R.id.edit_user_name)
         val loginEditText = dialogView.findViewById<EditText>(R.id.edit_user_login)
         val emailEditText = dialogView.findViewById<EditText>(R.id.edit_user_email)
-        val passwordEditText =  dialogView.findViewById<EditText>(R.id.edit_user_password)
+        //val passwordEditText =  dialogView.findViewById<EditText>(R.id.edit_user_password)
         val phoneNumberEditText = dialogView.findViewById<EditText>(R.id.edit_user_phone_number)
         val roleEditText = dialogView.findViewById<EditText>(R.id.edit_user_role)
 
@@ -428,7 +426,6 @@ class TableAdapter<T>(
         nameEditText.setText(user.user_name)
         loginEditText.setText(user.login)
         emailEditText.setText(user.email)
-        passwordEditText.setText(user.password)
         phoneNumberEditText.setText(user.phone_number)
         roleEditText.setText(user.role)
 
@@ -436,23 +433,23 @@ class TableAdapter<T>(
             val newName = nameEditText.text.toString()
             val newLogin = loginEditText.text.toString()
             val newEmail = emailEditText.text.toString()
-            val newPassword = passwordEditText.text.toString()
+           // val newPassword = passwordEditText.text.toString()
             val newPhoneNumber = phoneNumberEditText.text.toString()
             val newRole = roleEditText.text.toString()
 
             // Вызов API с новыми параметрами
-            updateUser(user.user_id, newName, newEmail, newLogin, newPassword, newPhoneNumber, newRole)
+            updateUser(user.user_id, newName, newEmail, newLogin, newPhoneNumber, newRole)
         }
 
         dialog.setNegativeButton("Отмена", null)
         dialog.create().show()
     }
 
-    private fun updateUser(user_id: Int, user_name: String, email: String, login: String, password: String, phone_number: String?, role: String) {
+    private fun updateUser(user_id: Int, user_name: String, email: String, login: String, phone_number: String?, role: String) {
 
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
-        val updatedUser = User(user_id = user_id, user_name = user_name, email = email, login = login, password = password, phone_number = phone_number, role = role)
+        val updatedUser = User(user_id = user_id, user_name = user_name, email = email, login = login, phone_number = phone_number, role = role)
 
         val call = apiService.updateUser(user_id, updatedUser)
 
@@ -500,7 +497,7 @@ class TableAdapter<T>(
     }
 
     private fun updateShipment(shipmentId: Int, quantity: Int, date: String, userId: Int) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         val updatedShipment = Shipment(shipmentId, quantity, date, userId)
 
         apiService.updateShipment(shipmentId, updatedShipment).enqueue(object : Callback<Shipment> {
@@ -561,7 +558,7 @@ class TableAdapter<T>(
     }
 
     private fun updateProduct(productId: Int, name: String, expireDate: String, type: String, manufacturer: String, weight: Double, shipment: Int, writeOff: Int?, extradition: Int?) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         val updatedProduct = Product(productId, name, expireDate, type, manufacturer, weight, shipment, writeOff, extradition)
 
         apiService.updateProduct(productId, updatedProduct).enqueue(object : Callback<Product> {
@@ -612,7 +609,7 @@ class TableAdapter<T>(
         dialog.create().show()
     }
     private fun updateWriteOffProducts(writeOffProduct: WriteOffOfProducts) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         apiService.updateWriteOffProduct(writeOffProduct.id_product_write_off, writeOffProduct)
             .enqueue(object : Callback<WriteOffOfProducts> {
                 override fun onResponse(
@@ -663,7 +660,7 @@ class TableAdapter<T>(
 
 
     private fun updateExtradition(extradition: Extradition) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         apiService.updateExtradition(extradition.extradition_id, extradition)
             .enqueue(object : Callback<Extradition> {
                 override fun onResponse(call: Call<Extradition>, response: Response<Extradition>) {
@@ -706,7 +703,7 @@ class TableAdapter<T>(
     }
 
     private fun updateProductsCurrentQuantity(id: Int, quantity: Int, product: Int) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         val updatedItem = ProductsCurrentQuantity(product_current_quantity_id = id, quantity = quantity, product = product)
 
         apiService.updateProductsCurrentQuantity(id, updatedItem).enqueue(object : Callback<ProductsCurrentQuantity> {
@@ -730,7 +727,7 @@ class TableAdapter<T>(
 
     // УДАЛЕНИЕ пошло
     private fun deleteProduct(productId: Int) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.deleteProduct(productId).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
@@ -752,7 +749,7 @@ class TableAdapter<T>(
 
 
     private fun deleteShipment(shipmentId: Int) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.deleteShipment(shipmentId).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
@@ -776,7 +773,7 @@ class TableAdapter<T>(
 
 
     private fun deleteUser(userId: Int) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.deleteUser(userId).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
@@ -796,7 +793,7 @@ class TableAdapter<T>(
 
 
     private fun deleteWriteOffOfProducts(writeOffId: Int) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.deleteWriteOffOfProducts(writeOffId).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
@@ -815,7 +812,7 @@ class TableAdapter<T>(
     }
 
     private fun deleteExtradition(extraditionId: Int) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.deleteExtradition(extraditionId).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
@@ -834,7 +831,7 @@ class TableAdapter<T>(
     }
 
     private fun deleteProductsCurrentQuantity(productsCurrentQuantityId: Int) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
 
         apiService.deleteProductsCurrentQuantity(productsCurrentQuantityId).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
@@ -865,25 +862,23 @@ class TableAdapter<T>(
         val nameEditText = dialogView.findViewById<EditText>(R.id.edit_user_name)
         val loginEditText = dialogView.findViewById<EditText>(R.id.edit_user_login)
         val emailEditText = dialogView.findViewById<EditText>(R.id.edit_user_email)
-        val passwordEditText = dialogView.findViewById<EditText>(R.id.edit_user_password)
         val phoneNumberEditText = dialogView.findViewById<EditText>(R.id.edit_user_phone_number)
         val roleEditText = dialogView.findViewById<EditText>(R.id.edit_user_role)
         val warningTextView = dialogView.findViewById<TextView>(R.id.warning_text)
 
         warningTextView.visibility = View.GONE
 
-        dialogBuilder.setPositiveButton("Save", null) // Кнопка без Listener, Listener будет добавлен позже.
+        dialogBuilder.setPositiveButton("Save", null)
         dialogBuilder.setNegativeButton("Cancel", null)
 
         val dialog = dialogBuilder.create()
 
         dialog.setOnShowListener {
             val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            saveButton.isEnabled = false // Изначально отключена.
+            saveButton.isEnabled = false
 
-            val textFields = listOf(nameEditText, loginEditText, emailEditText, passwordEditText, phoneNumberEditText, roleEditText)
+            val textFields = listOf(nameEditText, loginEditText, emailEditText, roleEditText)
 
-            // Добавляем TextWatcher для проверки заполненности всех полей.
             val watcher = object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -901,17 +896,15 @@ class TableAdapter<T>(
                 override fun afterTextChanged(s: Editable?) {}
             }
 
-            // Добавляем TextWatcher ко всем полям.
             textFields.forEach { it.addTextChangedListener(watcher) }
 
             saveButton.setOnClickListener {
                 val newUser = User(
-                    user_id = 0,  // ID будет присвоен автоматически
+                    user_id = 0,
                     user_name = nameEditText.text.toString(),
                     login = loginEditText.text.toString(),
                     email = emailEditText.text.toString(),
-                    password = passwordEditText.text.toString(),
-                    phone_number = phoneNumberEditText.text.toString(),
+                    phone_number = phoneNumberEditText.text.toString().takeIf { it.isNotBlank() },
                     role = roleEditText.text.toString()
                 )
                 addUser(newUser)
@@ -926,7 +919,7 @@ class TableAdapter<T>(
 
 
     private fun addUser(user: User) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         apiService.addUser(user).enqueue(object : Callback<User> {
             override fun onResponse(call: Call<User>, response: Response<User>) {
                 if (response.isSuccessful) {
@@ -1015,7 +1008,7 @@ class TableAdapter<T>(
 
 
     private fun addProduct(product: Product) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         apiService.addProduct(product).enqueue(object : Callback<Product> {
             override fun onResponse(call: Call<Product>, response: Response<Product>) {
                 if (response.isSuccessful) {
@@ -1093,7 +1086,7 @@ class TableAdapter<T>(
 
     // Метод для добавления новой записи Shipment через API
     private fun addShipment(shipment: Shipment) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         apiService.addShipment(shipment).enqueue(object : Callback<Shipment> {
             override fun onResponse(call: Call<Shipment>, response: Response<Shipment>) {
                 if (response.isSuccessful) {
@@ -1172,7 +1165,7 @@ class TableAdapter<T>(
     }
 
     private fun addWriteOffProduct(writeOffProduct: WriteOffOfProducts) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         apiService.addWriteOffProduct(writeOffProduct).enqueue(object : Callback<WriteOffOfProducts> {
             override fun onResponse(call: Call<WriteOffOfProducts>, response: Response<WriteOffOfProducts>) {
                 if (response.isSuccessful) {
@@ -1245,7 +1238,7 @@ class TableAdapter<T>(
     }
 
     private fun addProductsCurrentQuantity(productsCurrentQuantity: ProductsCurrentQuantity) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         apiService.addProductsCurrentQuantity(productsCurrentQuantity).enqueue(object : Callback<ProductsCurrentQuantity> {
             override fun onResponse(call: Call<ProductsCurrentQuantity>, response: Response<ProductsCurrentQuantity>) {
                 if (response.isSuccessful) {
@@ -1321,7 +1314,7 @@ class TableAdapter<T>(
 
 
     private fun addExtradition(extradition: Extradition) {
-        val apiService = RetrofitClient.apiService
+        val apiService = RetrofitClient.getApiService(context)
         apiService.addExtradition(extradition).enqueue(object : Callback<Extradition> {
             override fun onResponse(call: Call<Extradition>, response: Response<Extradition>) {
                 if (response.isSuccessful) {

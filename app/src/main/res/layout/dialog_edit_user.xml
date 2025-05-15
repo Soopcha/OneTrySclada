@@ -14,7 +14,9 @@
     <EditText
         android:id="@+id/edit_user_name"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
+        android:minHeight="48dp"
+        android:gravity="center_vertical"
         android:hint="Введите имя" />
 
     <!-- Поле для ввода логина пользователя -->
@@ -26,7 +28,9 @@
     <EditText
         android:id="@+id/edit_user_login"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
+        android:minHeight="48dp"
+        android:gravity="center_vertical"
         android:hint="Введите логин" />
 
     <!-- Поле для ввода email пользователя -->
@@ -38,22 +42,11 @@
     <EditText
         android:id="@+id/edit_user_email"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
+        android:minHeight="48dp"
+        android:gravity="center_vertical"
         android:hint="Введите email" />
 
-
-    <!-- Поле для ввода пароля пользователя -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Пароль" />
-
-    <EditText
-        android:id="@+id/edit_user_password"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Введите пароль"
-        android:inputType="textPassword" />
 
     <!-- Поле для ввода номера телефона пользователя -->
     <TextView
@@ -64,20 +57,26 @@
     <EditText
         android:id="@+id/edit_user_phone_number"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
+        android:minHeight="48dp"
+        android:gravity="center_vertical"
         android:hint="Введите номер телефона"
         android:inputType="phone" />
 
     <!-- Поле для ввода роли пользователя -->
     <TextView
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
+        android:minHeight="48dp"
+        android:gravity="center_vertical"
         android:text="Роль" />
 
     <EditText
         android:id="@+id/edit_user_role"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
+        android:minHeight="48dp"
+        android:gravity="center_vertical"
         android:hint="Введите роль" />
 
 </LinearLayout>

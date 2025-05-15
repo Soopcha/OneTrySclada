@@ -1,146 +1,165 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="16dp">
 
-    <Button
-        android:id="@+id/user_button"
-        android:layout_width="0dp"
+    <!-- Заголовок таблицы -->
+    <TextView
+        android:id="@+id/table_title"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Users"
+        android:text="Table"
+        android:textSize="24sp"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp"
-        android:backgroundTint="#9D4545"/>
+        app:layout_constraintStart_toStartOf="parent" />
 
-    <Button
-        android:id="@+id/shipment_button"
-        android:layout_width="0dp"
+    <!-- Кнопки для выбора таблиц -->
+    <LinearLayout
+        android:id="@+id/buttons_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Shipments"
-        app:layout_constraintTop_toBottomOf="@id/user_button"
+        android:orientation="vertical"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/table_title"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp"
-        android:backgroundTint="#9D4545"/>
+        app:layout_constraintEnd_toEndOf="parent">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/user_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Users"
+                android:backgroundTint="#9D4545" />
+
+            <Button
+                android:id="@+id/shipment_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Shipments"
+                android:backgroundTint="#9D4545" />
+
+            <Button
+                android:id="@+id/product_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Products"
+                android:backgroundTint="#9D4545" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
+
+            <Button
+                android:id="@+id/write_off_products_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Write Off"
+                android:backgroundTint="#9D4545" />
+
+            <Button
+                android:id="@+id/products_current_quantity_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Quantity"
+                android:backgroundTint="#9D4545" />
+
+            <Button
+                android:id="@+id/extradition_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Extradition"
+                android:backgroundTint="#9D4545" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Кнопка выхода -->
     <Button
-        android:id="@+id/product_button"
-        android:layout_width="0dp"
+        android:id="@+id/logout_button"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Products"
-        app:layout_constraintTop_toBottomOf="@id/shipment_button"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp"
-        android:backgroundTint="#9D4545"/>
+        android:text="Выйти"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/buttons_container"
+        app:layout_constraintStart_toStartOf="parent" />
 
-    <Button
-        android:id="@+id/write_off_products_button"
+    <!-- Поле поиска -->
+    <EditText
+        android:id="@+id/searchEditText"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Write-Offs"
-        app:layout_constraintTop_toBottomOf="@id/product_button"
+        android:layout_height="48dp"
+        android:minHeight="48dp"
+        android:gravity="center_vertical"
+        android:hint="Поиск"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/logout_button"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp"
-        android:backgroundTint="#9D4545"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <Button
-        android:id="@+id/products_current_quantity_button"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Products current quantity"
-        app:layout_constraintTop_toBottomOf="@id/write_off_products_button"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp"
-        android:backgroundTint="#9D4545"/>
-
-    <Button
-        android:id="@+id/extradition_button"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Extradition"
-        app:layout_constraintTop_toBottomOf="@id/products_current_quantity_button"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp"
-        android:backgroundTint="#9D4545"/>
-
+    <!-- Спиннеры для сортировки и фильтрации -->
     <LinearLayout
         android:id="@+id/sorting_controls"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:padding="8dp"
-        app:layout_constraintTop_toBottomOf="@id/extradition_button"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/searchEditText"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Spinner для выбора поля сортировки -->
         <Spinner
             android:id="@+id/sortFieldSpinner"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
+            android:minHeight="48dp"
             android:padding="8dp" />
 
-        <!-- Spinner для выбора порядка сортировки -->
         <Spinner
             android:id="@+id/sortOrderSpinner"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
+            android:minHeight="48dp"
             android:padding="8dp" />
     </LinearLayout>
 
-    <!-- Spinner для фильтрации выпадающей -->
     <Spinner
         android:id="@+id/filterOtherSpinner"
         android:layout_width="0dp"
         android:layout_height="48dp"
-        android:padding="8dp"
+        android:layout_marginTop="8dp"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/sorting_controls"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_margin="8dp" />
-
-    <!-- Поле для поиска -->
-    <EditText
-        android:id="@+id/searchEditText"
-        android:layout_width="0dp"
-        android:layout_height="48dp"
-        android:hint="Search..."
-        android:inputType="text"
-        android:padding="8dp"
-        android:layout_margin="8dp"
-        app:layout_constraintTop_toBottomOf="@id/filterOtherSpinner"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-<!--    &lt;!&ndash; Заголовок таблицы &ndash;&gt;-->
-    <TextView
-        android:id="@+id/table_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="This is the Table Layout"
-        app:layout_constraintTop_toBottomOf="@id/searchEditText"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_margin="16dp" />
-
+    <!-- Таблица с прокруткой -->
     <ScrollView
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/table_title"
+        app:layout_constraintTop_toBottomOf="@id/filterOtherSpinner"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
+        android:layout_marginTop="8dp">
 
         <HorizontalScrollView
             android:layout_width="match_parent"
@@ -148,45 +167,12 @@
 
             <TableLayout
                 android:id="@+id/tableLayout"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:stretchColumns="1,2,3,4,5,6">
-
-                <!-- Здесь добавьте строки для данных пользователей -->
-                <!-- Например, добавьте TableRow для каждого пользователя -->
-                <!-- Ваш код добавления строк будет в fetchUsers() -->
-
-            </TableLayout>
+                android:stretchColumns="*"
+                android:shrinkColumns="*"
+                android:layout_gravity="start" />
         </HorizontalScrollView>
     </ScrollView>
-
-<!--    <androidx.constraintlayout.widget.ConstraintLayout-->
-<!--        xmlns:android="http://schemas.android.com/apk/res/android"-->
-<!--        xmlns:app="http://schemas.android.com/apk/res-auto"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent">-->
-
-<!--        &lt;!&ndash; Toolbar с изображением &ndash;&gt;-->
-<!--        <androidx.appcompat.widget.Toolbar-->
-<!--            android:id="@+id/toolbar"-->
-<!--            android:layout_width="100dp"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:background="@color/white"-->
-<!--            app:layout_constraintBottom_toBottomOf="parent"-->
-<!--            app:layout_constraintStart_toStartOf="parent"-->
-<!--            app:layout_constraintEnd_toEndOf="parent">-->
-
-<!--            &lt;!&ndash; Кастомное изображение вместо navigationIcon &ndash;&gt;-->
-<!--            <ImageView-->
-<!--                android:id="@+id/backButton"-->
-<!--                android:layout_width="40dp"-->
-<!--                android:layout_height="40dp"-->
-<!--                android:src="@drawable/beck"-->
-<!--                android:layout_gravity="start"-->
-<!--                android:scaleType="fitCenter"-->
-<!--                android:contentDescription="Back Button" />-->
-<!--        </androidx.appcompat.widget.Toolbar>-->
-
-<!--    </androidx.constraintlayout.widget.ConstraintLayout>-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
