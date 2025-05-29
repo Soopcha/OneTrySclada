@@ -8,13 +8,15 @@ import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Button
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.TableLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import com.example.onetrysclada.R
 import com.example.onetrysclada.TableAdapter
 import com.example.onetrysclada.data.models.Extradition
@@ -24,20 +26,16 @@ import com.example.onetrysclada.data.models.Shipment
 import com.example.onetrysclada.data.models.User
 import com.example.onetrysclada.data.models.WriteOffOfProducts
 import com.example.onetrysclada.data.network.RetrofitClient
+import com.google.android.material.navigation.NavigationView
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 class TableActivity : AppCompatActivity() {
 
-    private lateinit var userButton: Button
-    private lateinit var shipmentButton: Button
-    private lateinit var productButton: Button
-    private lateinit var writeOffProductsButton: Button
-    private lateinit var productsCurrentQuantityButton: Button
-    private lateinit var extraditionButton: Button
-    private lateinit var logoutButton: Button // Кнопка выхода
-
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var navView: NavigationView
+    private lateinit var toolbar: Toolbar
     private lateinit var tableTitle: TextView
     private lateinit var tableLayout: TableLayout
     private lateinit var sortFieldSpinner: Spinner
@@ -57,164 +55,162 @@ class TableActivity : AppCompatActivity() {
         setContentView(R.layout.table)
 
         // Инициализация UI-элементов
+        drawerLayout = findViewById(R.id.drawer_layout)
+        navView = findViewById(R.id.nav_view)
+        toolbar = findViewById(R.id.toolbar)
         tableLayout = findViewById(R.id.tableLayout)
         tableTitle = findViewById(R.id.table_title)
-        userButton = findViewById(R.id.user_button)
-        shipmentButton = findViewById(R.id.shipment_button)
-        productButton = findViewById(R.id.product_button)
-        writeOffProductsButton = findViewById(R.id.write_off_products_button)
-        productsCurrentQuantityButton = findViewById(R.id.products_current_quantity_button)
-        extraditionButton = findViewById(R.id.extradition_button)
         sortFieldSpinner = findViewById(R.id.sortFieldSpinner)
         sortOrderSpinner = findViewById(R.id.sortOrderSpinner)
         searchEditText = findViewById(R.id.searchEditText)
         filterRoleSpinner = findViewById(R.id.filterOtherSpinner)
-        logoutButton = findViewById(R.id.logout_button) // Предполагается, что добавлен в table.xml
 
-        // Кнопка выхода
-        logoutButton.setOnClickListener {
-            RetrofitClient.clearToken(this)
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
-            Toast.makeText(this, "Выход выполнен", Toast.LENGTH_SHORT).show()
-        }
+        // Настройка Toolbar
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_menu) // Иконка гамбургер-меню
+        supportActionBar?.setDisplayShowTitleEnabled(false) // Отключаем заголовок Toolbar
 
-        // Установка слушателей на кнопки
-        userButton.setOnClickListener {
-            tableTitle.text = "User Table"
-            updateSortFieldSpinner(listOf("ID", "Name", "Email", "Login"))
-            setFilterSpinnerVisibility(true)
+        // Настройка NavigationView
+        navView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_users -> {
+                    tableTitle.text = "User Table"
+                    updateSortFieldSpinner(listOf("ID", "Name", "Email", "Login"))
+                    setFilterSpinnerVisibility(true)
 
-            val roles = listOf("All", "admin", "user")
-            val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, roles)
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            filterRoleSpinner.adapter = adapter
+                    val roles = listOf("All", "admin", "user")
+                    val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, roles)
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                    filterRoleSpinner.adapter = adapter
 
-            filterRoleSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                    val selectedRole = roles[position]
-                    val filters = if (selectedRole == "All") emptyMap() else mapOf("role" to selectedRole)
-                    fetchUsers(filters = filters)
-                }
-
-                override fun onNothingSelected(parent: AdapterView<*>) {}
-            }
-
-            fetchUsers()
-
-            searchEditText.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    filterUsers(s.toString())
-                }
-                override fun afterTextChanged(s: Editable?) {}
-            })
-        }
-
-        shipmentButton.setOnClickListener {
-            setFilterSpinnerVisibility(false)
-            updateSortFieldSpinner(listOf("ID", "Date", "User"))
-            showShipmentTable()
-
-            searchEditText.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    filterShipments(s.toString())
-                }
-                override fun afterTextChanged(s: Editable?) {}
-            })
-        }
-
-        productButton.setOnClickListener {
-            updateSortFieldSpinner(listOf("ID", "Name", "Shipment", "Manufacturer"))
-            setFilterSpinnerVisibility(true)
-
-            val productTypes = listOf("All", "Type A", "Type B", "Type C")
-            val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, productTypes)
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            filterRoleSpinner.adapter = adapter
-
-            filterRoleSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                    val selectedType = productTypes[position]
-                    val filters = if (selectedType == "All") emptyMap() else mapOf("product_type" to selectedType)
-                    fetchProducts(filters = filters)
-                }
-
-                override fun onNothingSelected(parent: AdapterView<*>) {}
-            }
-
-            showProductTable()
-
-            searchEditText.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    filterProducts(s.toString())
-                }
-                override fun afterTextChanged(s: Editable?) {}
-            })
-        }
-
-        writeOffProductsButton.setOnClickListener {
-            updateSortFieldSpinner(listOf("ID", "User", "Quantity", "Date"))
-            setFilterSpinnerVisibility(true)
-
-            val filters = listOf("All", "Defective", "Expired")
-            val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, filters)
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            filterRoleSpinner.adapter = adapter
-
-            filterRoleSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                    val selectedFilter = filters[position]
-                    val filterParams = when (selectedFilter) {
-                        "Defective" -> mapOf("reason" to "Брак")
-                        "Expired" -> mapOf("reason" to "Просрочено")
-                        else -> emptyMap()
+                    filterRoleSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                        override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                            val selectedRole = roles[position]
+                            val filters = if (selectedRole == "All") emptyMap() else mapOf("role" to selectedRole)
+                            fetchUsers(filters = filters)
+                        }
+                        override fun onNothingSelected(parent: AdapterView<*>) {}
                     }
-                    fetchWriteOffProducts(filterParams)
-                }
 
-                override fun onNothingSelected(parent: AdapterView<*>) {}
+                    fetchUsers()
+
+                    searchEditText.addTextChangedListener(object : TextWatcher {
+                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                            filterUsers(s.toString())
+                        }
+                        override fun afterTextChanged(s: Editable?) {}
+                    })
+                }
+                R.id.nav_shipments -> {
+                    setFilterSpinnerVisibility(false)
+                    updateSortFieldSpinner(listOf("ID", "Date", "User"))
+                    showShipmentTable()
+
+                    searchEditText.addTextChangedListener(object : TextWatcher {
+                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                            filterShipments(s.toString())
+                        }
+                        override fun afterTextChanged(s: Editable?) {}
+                    })
+                }
+                R.id.nav_products -> {
+                    updateSortFieldSpinner(listOf("ID", "Name", "Shipment", "Manufacturer"))
+                    setFilterSpinnerVisibility(true)
+
+                    val productTypes = listOf("All", "Type A", "Type B", "Type C")
+                    val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, productTypes)
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                    filterRoleSpinner.adapter = adapter
+
+                    filterRoleSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                        override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                            val selectedType = productTypes[position]
+                            val filters = if (selectedType == "All") emptyMap() else mapOf("product_type" to selectedType)
+                            fetchProducts(filters = filters)
+                        }
+                        override fun onNothingSelected(parent: AdapterView<*>) {}
+                    }
+
+                    showProductTable()
+
+                    searchEditText.addTextChangedListener(object : TextWatcher {
+                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                            filterProducts(s.toString())
+                        }
+                        override fun afterTextChanged(s: Editable?) {}
+                    })
+                }
+                R.id.nav_write_off -> {
+                    updateSortFieldSpinner(listOf("ID", "User", "Quantity", "Date"))
+                    setFilterSpinnerVisibility(true)
+
+                    val filters = listOf("All", "Defective", "Expired")
+                    val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, filters)
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                    filterRoleSpinner.adapter = adapter
+
+                    filterRoleSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                        override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                            val selectedFilter = filters[position]
+                            val filterParams = when (selectedFilter) {
+                                "Defective" -> mapOf("reason" to "Брак")
+                                "Expired" -> mapOf("reason" to "Просрочено")
+                                else -> emptyMap()
+                            }
+                            fetchWriteOffProducts(filterParams)
+                        }
+                        override fun onNothingSelected(parent: AdapterView<*>) {}
+                    }
+
+                    showWriteOffProducts()
+
+                    searchEditText.addTextChangedListener(object : TextWatcher {
+                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                            filterWriteOffOfProducts(s.toString())
+                        }
+                        override fun afterTextChanged(s: Editable?) {}
+                    })
+                }
+                R.id.nav_quantity -> {
+                    setFilterSpinnerVisibility(false)
+                    updateSortFieldSpinner(listOf("ID", "Product Name", "Available Quantity"))
+                    showProductsCurrentQuantity()
+
+                    searchEditText.addTextChangedListener(object : TextWatcher {
+                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                            filterProductsCurrentQuantity(s.toString())
+                        }
+                        override fun afterTextChanged(s: Editable?) {}
+                    })
+                }
+                R.id.nav_extradition -> {
+                    setFilterSpinnerVisibility(false)
+                    updateSortFieldSpinner(listOf("ID", "User", "Date", "Quantity"))
+                    showExtradition()
+
+                    searchEditText.addTextChangedListener(object : TextWatcher {
+                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                            filterExtradition(s.toString())
+                        }
+                        override fun afterTextChanged(s: Editable?) {}
+                    })
+                }
+                R.id.nav_logout -> {
+                    RetrofitClient.clearToken(this)
+                    startActivity(Intent(this, MainActivity::class.java))
+                    finish()
+                    Toast.makeText(this, "Выход выполнен", Toast.LENGTH_SHORT).show()
+                }
             }
-
-            showWriteOffProducts()
-
-            searchEditText.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    filterWriteOffOfProducts(s.toString())
-                }
-                override fun afterTextChanged(s: Editable?) {}
-            })
-        }
-
-        productsCurrentQuantityButton.setOnClickListener {
-            setFilterSpinnerVisibility(false)
-            updateSortFieldSpinner(listOf("ID", "Product Name", "Available Quantity"))
-            showProductsCurrentQuantity()
-
-            searchEditText.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    filterProductsCurrentQuantity(s.toString())
-                }
-                override fun afterTextChanged(s: Editable?) {}
-            })
-        }
-
-        extraditionButton.setOnClickListener {
-            setFilterSpinnerVisibility(false)
-            updateSortFieldSpinner(listOf("ID", "User", "Date", "Quantity"))
-            showExtradition()
-
-            searchEditText.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    filterExtradition(s.toString())
-                }
-                override fun afterTextChanged(s: Editable?) {}
-            })
+            drawerLayout.closeDrawer(GravityCompat.START)
+            true
         }
 
         // Инициализация Spinners
@@ -236,6 +232,15 @@ class TableActivity : AppCompatActivity() {
             }
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
+
+        // Открытие меню при клике на иконку
+        toolbar.setNavigationOnClickListener {
+            drawerLayout.openDrawer(GravityCompat.START)
+        }
+
+        // Загрузка таблицы Users по умолчанию
+        navView.menu.findItem(R.id.nav_users).isChecked = true
+        navView.menu.performIdentifierAction(R.id.nav_users, 0)
     }
 
     private fun updateSortFieldSpinner(fields: List<String>) {
@@ -575,6 +580,14 @@ class TableActivity : AppCompatActivity() {
             }
             403 -> Toast.makeText(this, "Доступ запрещён.", Toast.LENGTH_LONG).show()
             else -> Toast.makeText(this, "Ошибка сервера: $code", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    override fun onBackPressed() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START)
+        } else {
+            super.onBackPressed()
         }
     }
 }
