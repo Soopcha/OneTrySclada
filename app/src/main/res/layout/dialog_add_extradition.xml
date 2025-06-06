@@ -1,56 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Дата экстрадиции" />
-
     <EditText
         android:id="@+id/edit_extradition_date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Введите дату (YYYY-MM-DD)"
+        android:minHeight="48dp"
+        android:layout_marginBottom="8dp"
+        android:hint="Дата выдачи"
         android:inputType="date" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Количество" />
 
     <EditText
         android:id="@+id/edit_extradition_quantity"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Введите количество"
+        android:minHeight="48dp"
+        android:layout_marginBottom="8dp"
+        android:hint="Количество"
         android:inputType="number" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="ID пользователя" />
-
-    <EditText
+    <Spinner
         android:id="@+id/edit_extradition_user"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Введите ID пользователя"
-        android:inputType="number" />
-    <!-- Поле для отображения предупреждений -->
+        android:minHeight="48dp"
+        android:layout_marginBottom="8dp"
+        android:hint="Пользователь" />
+
     <TextView
         android:id="@+id/warning_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:textColor="@android:color/holo_red_dark"
-        android:textSize="14sp"
-        android:layout_marginTop="8dp"
-        android:gravity="center"
-        android:text="Все поля должны быть заполнены." />
+        android:textColor="#9D4545"
+        android:visibility="gone" />
 
 </LinearLayout>

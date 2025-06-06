@@ -1,66 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Поле для ввода количества -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Quantity"
-        android:textSize="16sp"
-        android:paddingBottom="8dp" />
+        android:text="Количество"
+        android:layout_marginBottom="8dp" />
 
     <EditText
         android:id="@+id/edit_shipment_quantity"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="number"
-        android:hint="Enter quantity" />
+        android:hint="Введите количество"
+        android:inputType="number" />
 
-    <!-- Поле для ввода даты отгрузки -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Date of Shipment"
-        android:textSize="16sp"
-        android:paddingTop="16dp"
-        android:paddingBottom="8dp" />
+        android:text="Дата отгрузки"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp" />
 
     <EditText
         android:id="@+id/edit_shipment_date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="date"
-        android:hint="Enter date (YYYY-MM-DD)" />
+        android:hint="Введите дату отгрузки"
+        android:minHeight="48dp"
+        android:layout_marginBottom="8dp"
+        android:inputType="date" />
 
-    <!-- Поле для ввода ID пользователя -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="User ID"
-        android:textSize="16sp"
-        android:paddingTop="16dp"
-        android:paddingBottom="8dp" />
+        android:text="Пользователь"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp" />
 
-    <EditText
+    <Spinner
         android:id="@+id/edit_shipment_user_id"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="number"
-        android:hint="Enter user ID" />
-    <!-- Поле для отображения предупреждений -->
+        android:hint="Пользователь" />
+
     <TextView
         android:id="@+id/warning_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:textColor="@android:color/holo_red_dark"
-        android:textSize="14sp"
-        android:layout_marginTop="8dp"
-        android:gravity="center"
-        android:text="Все поля должны быть заполнены." />
+        android:visibility="gone" />
 
 </LinearLayout>

@@ -11,11 +11,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.Spinner
 import android.widget.TableLayout
 import android.widget.TableRow
 import android.widget.TextView
@@ -611,6 +614,37 @@ class TableAdapter<T>(
     }
 
 
+    private fun fetchUsersAndPopulateSpinner(spinner: Spinner, onUserSelected: (Int) -> Unit) {
+        val apiService = RetrofitClient.getApiService(context)
+        apiService.getUsers().enqueue(object : Callback<List<User>> {
+            override fun onResponse(call: Call<List<User>>, response: Response<List<User>>) {
+                if (response.isSuccessful) {
+                    val users = response.body() ?: emptyList()
+                    // Создаем список строк вида "Name (Login)"
+                    val userDisplayList = users.map { "${it.user_name} (${it.login})" }
+                    // Создаем адаптер для Spinner
+                    val adapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, userDisplayList)
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                    spinner.adapter = adapter
+                    // Устанавливаем обработчик выбора
+                    spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                        override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                            val selectedUserId = users[position].user_id
+                            onUserSelected(selectedUserId)
+                        }
+                        override fun onNothingSelected(parent: AdapterView<*>) {
+                            onUserSelected(0) // По умолчанию
+                        }
+                    }
+                } else {
+                    Toast.makeText(context, "Не удалось загрузить пользователей", Toast.LENGTH_SHORT).show()
+                }
+            }
+            override fun onFailure(call: Call<List<User>>, t: Throwable) {
+                Toast.makeText(context, "Ошибка: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
 
 
     private fun openEditShipmentDialog(shipment: Shipment) {
@@ -620,20 +654,24 @@ class TableAdapter<T>(
 
         val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_shipment_quantity)
         val dateEditText = dialogView.findViewById<EditText>(R.id.edit_shipment_date)
-        val userEditText = dialogView.findViewById<EditText>(R.id.edit_shipment_user)
+        val userSpinner = dialogView.findViewById<Spinner>(R.id.edit_shipment_user)
 
         quantityEditText.setText(shipment.quantity.toString())
         dateEditText.setText(shipment.date_of_shipment)
-        userEditText.setText(shipment.user.toString())
 
-        dialog.setPositiveButton("Save") { _, _ ->
-            val newQuantity = quantityEditText.text.toString().toInt()
-            val newDate = dateEditText.text.toString()
-            val newUser = userEditText.text.toString().toInt()
+        var selectedUserId = shipment.user // Сохраняем выбранный user_id
 
-            updateShipment(shipment.shipment_id, newQuantity, newDate, newUser)
+        // Загружаем пользователей в Spinner
+        fetchUsersAndPopulateSpinner(userSpinner) { userId ->
+            selectedUserId = userId
         }
-        dialog.setNegativeButton("Cancel", null)
+
+        dialog.setPositiveButton("Сохранить") { _, _ ->
+            val newQuantity = quantityEditText.text.toString().toIntOrNull() ?: shipment.quantity
+            val newDate = dateEditText.text.toString()
+            updateShipment(shipment.shipment_id, newQuantity, newDate, selectedUserId)
+        }
+        dialog.setNegativeButton("Отмена", null)
         dialog.create().show()
     }
 
@@ -718,7 +756,6 @@ class TableAdapter<T>(
         })
     }
 
-
     private fun openEditWriteOffProductsDialog(writeOffProduct: WriteOffOfProducts) {
         val dialog = AlertDialog.Builder(context)
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_write_off_products, null)
@@ -727,28 +764,33 @@ class TableAdapter<T>(
         val dateEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_date)
         val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_quantity)
         val reasonEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_reason)
-        val userEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_user)
+        val userSpinner = dialogView.findViewById<Spinner>(R.id.edit_write_off_user)
 
-        // Заполнение текущих значений
         dateEditText.setText(writeOffProduct.product_write_off_date)
         quantityEditText.setText(writeOffProduct.quantity.toString())
         reasonEditText.setText(writeOffProduct.reason)
-        userEditText.setText(writeOffProduct.user.toString())
 
-        dialog.setPositiveButton("Save") { _, _ ->
+        var selectedUserId = writeOffProduct.user
+
+        fetchUsersAndPopulateSpinner(userSpinner) { userId ->
+            selectedUserId = userId
+        }
+
+        dialog.setPositiveButton("Сохранить") { _, _ ->
             val updatedWriteOffProduct = WriteOffOfProducts(
                 id_product_write_off = writeOffProduct.id_product_write_off,
                 product_write_off_date = dateEditText.text.toString(),
                 quantity = quantityEditText.text.toString().toIntOrNull() ?: 0,
                 reason = reasonEditText.text.toString(),
-                user = userEditText.text.toString().toIntOrNull() ?: writeOffProduct.user
+                user = selectedUserId
             )
             updateWriteOffProducts(updatedWriteOffProduct)
         }
 
-        dialog.setNegativeButton("Cancel", null)
+        dialog.setNegativeButton("Отмена", null)
         dialog.create().show()
     }
+
     private fun updateWriteOffProducts(writeOffProduct: WriteOffOfProducts) {
         val apiService = RetrofitClient.getApiService(context)
         apiService.updateWriteOffProduct(writeOffProduct.id_product_write_off, writeOffProduct)
@@ -778,24 +820,28 @@ class TableAdapter<T>(
 
         val dateEditText = dialogView.findViewById<EditText>(R.id.edit_extradition_date)
         val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_extradition_quantity)
-        val userEditText = dialogView.findViewById<EditText>(R.id.edit_extradition_user)
+        val userSpinner = dialogView.findViewById<Spinner>(R.id.edit_extradition_user)
 
-        // Заполнение текущих значений
         dateEditText.setText(extradition.date_of_extradition)
         quantityEditText.setText(extradition.quantity.toString())
-        userEditText.setText(extradition.user.toString())
 
-        dialog.setPositiveButton("Save") { _, _ ->
+        var selectedUserId = extradition.user
+
+        fetchUsersAndPopulateSpinner(userSpinner) { userId ->
+            selectedUserId = userId
+        }
+
+        dialog.setPositiveButton("Сохранить") { _, _ ->
             val updatedExtradition = Extradition(
                 extradition_id = extradition.extradition_id,
                 date_of_extradition = dateEditText.text.toString(),
                 quantity = quantityEditText.text.toString().toIntOrNull() ?: extradition.quantity,
-                user = userEditText.text.toString().toIntOrNull() ?: extradition.user
+                user = selectedUserId
             )
             updateExtradition(updatedExtradition)
         }
 
-        dialog.setNegativeButton("Cancel", null)
+        dialog.setNegativeButton("Отмена", null)
         dialog.create().show()
     }
 
@@ -1207,13 +1253,20 @@ class TableAdapter<T>(
 
         val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_shipment_quantity)
         val dateEditText = dialogView.findViewById<EditText>(R.id.edit_shipment_date)
-        val userIdEditText = dialogView.findViewById<EditText>(R.id.edit_shipment_user_id)
+        val userSpinner = dialogView.findViewById<Spinner>(R.id.edit_shipment_user_id)
         val warningTextView = dialogView.findViewById<TextView>(R.id.warning_text)
 
         warningTextView.visibility = View.GONE
 
-        dialogBuilder.setPositiveButton("Save", null)
-        dialogBuilder.setNegativeButton("Cancel", null)
+        var selectedUserId = 0 // Сохраняем выбранный user_id
+
+        // Загружаем пользователей в Spinner
+        fetchUsersAndPopulateSpinner(userSpinner) { userId ->
+            selectedUserId = userId
+        }
+
+        dialogBuilder.setPositiveButton("Сохранить", null)
+        dialogBuilder.setNegativeButton("Отмена", null)
 
         val dialog = dialogBuilder.create()
 
@@ -1221,12 +1274,12 @@ class TableAdapter<T>(
             val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
             saveButton.isEnabled = false
 
-            val textFields = listOf(quantityEditText, dateEditText, userIdEditText)
+            val textFields = listOf(quantityEditText, dateEditText)
 
             val watcher = object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    val allFieldsFilled = textFields.all { it.text.isNotBlank() }
+                    val allFieldsFilled = textFields.all { it.text.isNotBlank() } && selectedUserId != 0
                     saveButton.isEnabled = allFieldsFilled
 
                     if (!allFieldsFilled) {
@@ -1236,7 +1289,6 @@ class TableAdapter<T>(
                         warningTextView.visibility = View.GONE
                     }
                 }
-
                 override fun afterTextChanged(s: Editable?) {}
             }
 
@@ -1247,7 +1299,7 @@ class TableAdapter<T>(
                     shipment_id = 0,
                     quantity = quantityEditText.text.toString().toIntOrNull() ?: 0,
                     date_of_shipment = dateEditText.text.toString(),
-                    user = userIdEditText.text.toString().toIntOrNull() ?: 0
+                    user = selectedUserId
                 )
                 addShipment(newShipment)
                 dialog.dismiss()
@@ -1286,13 +1338,19 @@ class TableAdapter<T>(
         val dateEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_date)
         val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_quantity)
         val reasonEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_reason)
-        val userEditText = dialogView.findViewById<EditText>(R.id.edit_write_off_user)
+        val userSpinner = dialogView.findViewById<Spinner>(R.id.edit_write_off_user)
         val warningTextView = dialogView.findViewById<TextView>(R.id.warning_text)
 
         warningTextView.visibility = View.GONE
 
-        dialogBuilder.setPositiveButton("Save", null)
-        dialogBuilder.setNegativeButton("Cancel", null)
+        var selectedUserId = 0
+
+        fetchUsersAndPopulateSpinner(userSpinner) { userId ->
+            selectedUserId = userId
+        }
+
+        dialogBuilder.setPositiveButton("Сохранить", null)
+        dialogBuilder.setNegativeButton("Отмена", null)
 
         val dialog = dialogBuilder.create()
 
@@ -1300,12 +1358,12 @@ class TableAdapter<T>(
             val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
             saveButton.isEnabled = false
 
-            val textFields = listOf(dateEditText, quantityEditText, reasonEditText, userEditText)
+            val textFields = listOf(dateEditText, quantityEditText, reasonEditText)
 
             val watcher = object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    val allFieldsFilled = textFields.all { it.text.isNotBlank() }
+                    val allFieldsFilled = textFields.all { it.text.isNotBlank() } && selectedUserId != 0
                     saveButton.isEnabled = allFieldsFilled
 
                     if (!allFieldsFilled) {
@@ -1315,7 +1373,6 @@ class TableAdapter<T>(
                         warningTextView.visibility = View.GONE
                     }
                 }
-
                 override fun afterTextChanged(s: Editable?) {}
             }
 
@@ -1327,7 +1384,7 @@ class TableAdapter<T>(
                     product_write_off_date = dateEditText.text.toString(),
                     quantity = quantityEditText.text.toString().toIntOrNull() ?: 0,
                     reason = reasonEditText.text.toString(),
-                    user = userEditText.text.toString().toIntOrNull() ?: 0
+                    user = selectedUserId
                 )
                 addWriteOffProduct(newWriteOffProduct)
                 dialog.dismiss()
@@ -1435,13 +1492,19 @@ class TableAdapter<T>(
 
         val dateEditText = dialogView.findViewById<EditText>(R.id.edit_extradition_date)
         val quantityEditText = dialogView.findViewById<EditText>(R.id.edit_extradition_quantity)
-        val userEditText = dialogView.findViewById<EditText>(R.id.edit_extradition_user)
+        val userSpinner = dialogView.findViewById<Spinner>(R.id.edit_extradition_user)
         val warningTextView = dialogView.findViewById<TextView>(R.id.warning_text)
 
         warningTextView.visibility = View.GONE
 
-        dialogBuilder.setPositiveButton("Save", null)
-        dialogBuilder.setNegativeButton("Cancel", null)
+        var selectedUserId = 0
+
+        fetchUsersAndPopulateSpinner(userSpinner) { userId ->
+            selectedUserId = userId
+        }
+
+        dialogBuilder.setPositiveButton("Сохранить", null)
+        dialogBuilder.setNegativeButton("Отмена", null)
 
         val dialog = dialogBuilder.create()
 
@@ -1449,12 +1512,12 @@ class TableAdapter<T>(
             val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
             saveButton.isEnabled = false
 
-            val textFields = listOf(dateEditText, quantityEditText, userEditText)
+            val textFields = listOf(dateEditText, quantityEditText)
 
             val watcher = object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    val allFieldsFilled = textFields.all { it.text.isNotBlank() }
+                    val allFieldsFilled = textFields.all { it.text.isNotBlank() } && selectedUserId != 0
                     saveButton.isEnabled = allFieldsFilled
 
                     if (!allFieldsFilled) {
@@ -1464,7 +1527,6 @@ class TableAdapter<T>(
                         warningTextView.visibility = View.GONE
                     }
                 }
-
                 override fun afterTextChanged(s: Editable?) {}
             }
 
@@ -1475,7 +1537,7 @@ class TableAdapter<T>(
                     extradition_id = 0,
                     date_of_extradition = dateEditText.text.toString(),
                     quantity = quantityEditText.text.toString().toIntOrNull() ?: 0,
-                    user = userEditText.text.toString().toIntOrNull() ?: 0
+                    user = selectedUserId
                 )
                 addExtradition(newExtradition)
                 dialog.dismiss()

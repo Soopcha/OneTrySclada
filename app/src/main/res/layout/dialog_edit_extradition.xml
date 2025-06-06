@@ -1,50 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Extradition Date"
-        android:layout_marginBottom="8dp" />
-
     <EditText
         android:id="@+id/edit_extradition_date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter date"
+        android:minHeight="48dp"
+        android:layout_marginBottom="8dp"
+        android:hint="Дата выдачи"
         android:inputType="date" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Quantity"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp" />
 
     <EditText
         android:id="@+id/edit_extradition_quantity"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter quantity"
+        android:minHeight="48dp"
+        android:layout_marginBottom="8dp"
+        android:hint="Количество"
         android:inputType="number" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="User ID"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp" />
-
-    <EditText
+    <Spinner
         android:id="@+id/edit_extradition_user"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter user ID"
-        android:inputType="number" />
+        android:hint="Пользователь" />
+
+    <TextView
+        android:id="@+id/warning_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#9D4545"
+        android:visibility="gone" />
 
 </LinearLayout>
