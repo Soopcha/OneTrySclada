@@ -32,23 +32,31 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class TableActivity : AppCompatActivity() {
+    private lateinit var drawerLayout: DrawerLayout // Layout для бокового меню
+    private lateinit var navView: NavigationView // Навигационное меню
+    private lateinit var toolbar: Toolbar // Панель инструментов
+    private lateinit var tableTitle: TextView // Заголовок таблицы
+    private lateinit var tableLayout: TableLayout // Layout для отображения таблицы
+    private lateinit var sortFieldSpinner: Spinner // Спиннер для выбора поля сортировки
+    private lateinit var sortOrderSpinner: Spinner // Спиннер для выбора порядка сортировки
+    private lateinit var searchEditText: EditText // Поле для поиска
+    private lateinit var filterRoleSpinner: Spinner // Спиннер для фильтрации (например, по роли)
 
-    private lateinit var drawerLayout: DrawerLayout
-    private lateinit var navView: NavigationView
-    private lateinit var toolbar: Toolbar
-    private lateinit var tableTitle: TextView
-    private lateinit var tableLayout: TableLayout
-    private lateinit var sortFieldSpinner: Spinner
-    private lateinit var sortOrderSpinner: Spinner
-    private lateinit var searchEditText: EditText
-    private lateinit var filterRoleSpinner: Spinner
+    private var users: MutableList<User> = mutableListOf() // Список пользователей
+    private var shipments: MutableList<Shipment> = mutableListOf() // Список поставок
+    private var products: MutableList<Product> = mutableListOf() // Список продуктов
+    private var writeOffProducts: MutableList<WriteOffOfProducts> = mutableListOf() // Список списанных продуктов
+    private var productsCurrentQuantities: MutableList<ProductsCurrentQuantity> = mutableListOf() // Список текущих количеств продуктов
+    private var extraditions: MutableList<Extradition> = mutableListOf() // Список выдач
 
-    private var users: MutableList<User> = mutableListOf()
-    private var shipments: MutableList<Shipment> = mutableListOf()
-    private var products: MutableList<Product> = mutableListOf()
-    private var writeOffProducts: MutableList<WriteOffOfProducts> = mutableListOf()
-    private var productsCurrentQuantities: MutableList<ProductsCurrentQuantity> = mutableListOf()
-    private var extraditions: MutableList<Extradition> = mutableListOf()
+    private var tableAdapter: TableAdapter<*>? = null // Адаптер для текущей таблицы
+    private var cachedUsers: List<User> = emptyList() // Кэш пользователей для оптимизации запросов
+    private var currentTableType: TableType = TableType.USER // Текущий тип отображаемой таблицы
+
+    // Перечисление для отслеживания типа таблицы
+    enum class TableType {
+        USER, SHIPMENT, PRODUCT, WRITE_OFF, QUANTITY, EXTRADITION
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,17 +76,21 @@ class TableActivity : AppCompatActivity() {
         // Настройка Toolbar
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_menu) // Иконка гамбургер-меню
-        supportActionBar?.setDisplayShowTitleEnabled(false) // Отключаем заголовок Toolbar
+        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_menu)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
 
         // Настройка NavigationView
         navView.setNavigationItemSelectedListener { menuItem ->
+            // Удаляем предыдущий слушатель текстового поля, чтобы избежать наложения
+            searchEditText.removeTextChangedListener(searchEditText.tag as? TextWatcher)
             when (menuItem.itemId) {
                 R.id.nav_users -> {
                     tableTitle.text = "User Table"
+                    currentTableType = TableType.USER
                     updateSortFieldSpinner(listOf("ID", "Name", "Email", "Login"))
                     setFilterSpinnerVisibility(true)
 
+                    // Настройка спиннера для фильтрации по ролям
                     val roles = listOf("All", "admin", "user")
                     val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, roles)
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -95,32 +107,43 @@ class TableActivity : AppCompatActivity() {
 
                     fetchUsers()
 
-                    searchEditText.addTextChangedListener(object : TextWatcher {
+                    // Добавляем слушатель для поиска
+                    val textWatcher = object : TextWatcher {
                         override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                             filterUsers(s.toString())
                         }
                         override fun afterTextChanged(s: Editable?) {}
-                    })
+                    }
+                    searchEditText.addTextChangedListener(textWatcher)
+                    searchEditText.tag = textWatcher
                 }
                 R.id.nav_shipments -> {
+                    tableTitle.text = "Shipment Table"
+                    currentTableType = TableType.SHIPMENT
                     setFilterSpinnerVisibility(false)
-                    updateSortFieldSpinner(listOf("ID", "Date", "User"))
+                    updateSortFieldSpinner(listOf("ID", "Date", "Usuario"))
                     showShipmentTable()
 
-                    searchEditText.addTextChangedListener(object : TextWatcher {
+                    // Добавляем слушатель для поиска
+                    val textWatcher = object : TextWatcher {
                         override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                             filterShipments(s.toString())
                         }
                         override fun afterTextChanged(s: Editable?) {}
-                    })
+                    }
+                    searchEditText.addTextChangedListener(textWatcher)
+                    searchEditText.tag = textWatcher
                 }
                 R.id.nav_products -> {
-                    updateSortFieldSpinner(listOf("ID", "Name", "Shipment", "Manufacturer"))
+                    tableTitle.text = "Product Table"
+                    currentTableType = TableType.PRODUCT
+                    updateSortFieldSpinner(listOf("ID", "Name", "Produto", "Manufacturer"))
                     setFilterSpinnerVisibility(true)
 
-                    val productTypes = listOf("All", "Type A", "Type B", "Type C")
+                    // Настройка спиннера для фильтрации по типам продуктов
+                    val productTypes = listOf("All", "Todos", "Tipo A", "Tipo B")
                     val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, productTypes)
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                     filterRoleSpinner.adapter = adapter
@@ -129,26 +152,32 @@ class TableActivity : AppCompatActivity() {
                         override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                             val selectedType = productTypes[position]
                             val filters = if (selectedType == "All") emptyMap() else mapOf("product_type" to selectedType)
-                            fetchProducts(filters = filters)
+                            fetchProducts(filters)
                         }
                         override fun onNothingSelected(parent: AdapterView<*>) {}
                     }
 
-                    showProductTable()
+                    showProduct()
 
-                    searchEditText.addTextChangedListener(object : TextWatcher {
+                    // Добавляем слушатель для поиска
+                    val textWatcher = object : TextWatcher {
                         override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                             filterProducts(s.toString())
                         }
                         override fun afterTextChanged(s: Editable?) {}
-                    })
+                    }
+                    searchEditText.addTextChangedListener(textWatcher)
+                    searchEditText.tag = textWatcher
                 }
                 R.id.nav_write_off -> {
-                    updateSortFieldSpinner(listOf("ID", "User", "Quantity", "Date"))
+                    tableTitle.text = "Write Off Products Table"
+                    currentTableType = TableType.WRITE_OFF
+                    updateSortFieldSpinner(listOf("ID", "Usuario", "Quantidade", "Data"))
                     setFilterSpinnerVisibility(true)
 
-                    val filters = listOf("All", "Defective", "Expired")
+                    // Настройка спиннера для фильтрации по причинам списания
+                    val filters = listOf("All", "Todos", "Defeituoso", "Expirado")
                     val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, filters)
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                     filterRoleSpinner.adapter = adapter
@@ -157,8 +186,8 @@ class TableActivity : AppCompatActivity() {
                         override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                             val selectedFilter = filters[position]
                             val filterParams = when (selectedFilter) {
-                                "Defective" -> mapOf("reason" to "Брак")
-                                "Expired" -> mapOf("reason" to "Просрочено")
+                                "Defeituoso" -> mapOf("Motivo" to "Defeito")
+                                "Expirado" -> mapOf("Motivo" to "Expirado")
                                 else -> emptyMap()
                             }
                             fetchWriteOffProducts(filterParams)
@@ -168,53 +197,67 @@ class TableActivity : AppCompatActivity() {
 
                     showWriteOffProducts()
 
-                    searchEditText.addTextChangedListener(object : TextWatcher {
+                    // Добавляем слушатель для поиска
+                    val textWatcher = object : TextWatcher {
                         override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                             filterWriteOffOfProducts(s.toString())
                         }
                         override fun afterTextChanged(s: Editable?) {}
-                    })
+                    }
+                    searchEditText.addTextChangedListener(textWatcher)
+                    searchEditText.tag = textWatcher
                 }
                 R.id.nav_quantity -> {
+                    tableTitle.text = "Products Current Quantity"
+                    currentTableType = TableType.QUANTITY
                     setFilterSpinnerVisibility(false)
-                    updateSortFieldSpinner(listOf("ID", "Product Name", "Available Quantity"))
+                    updateSortFieldSpinner(listOf("ID", "Nome do Produto", "Quantidade Disponível"))
                     showProductsCurrentQuantity()
 
-                    searchEditText.addTextChangedListener(object : TextWatcher {
+                    // Добавляем слушатель для поиска
+                    val textWatcher = object : TextWatcher {
                         override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                             filterProductsCurrentQuantity(s.toString())
                         }
                         override fun afterTextChanged(s: Editable?) {}
-                    })
+                    }
+                    searchEditText.addTextChangedListener(textWatcher)
+                    searchEditText.tag = textWatcher
                 }
                 R.id.nav_extradition -> {
+                    tableTitle.text = "Extradition"
+                    currentTableType = TableType.EXTRADITION
                     setFilterSpinnerVisibility(false)
-                    updateSortFieldSpinner(listOf("ID", "User", "Date", "Quantity"))
+                    updateSortFieldSpinner(listOf("ID", "Usuario", "Data", "Quantidade"))
                     showExtradition()
 
-                    searchEditText.addTextChangedListener(object : TextWatcher {
+                    // Добавляем слушатель для поиска
+                    val textWatcher = object : TextWatcher {
                         override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                             filterExtradition(s.toString())
                         }
                         override fun afterTextChanged(s: Editable?) {}
-                    })
+                    }
+                    searchEditText.addTextChangedListener(textWatcher)
+                    searchEditText.tag = textWatcher
                 }
                 R.id.nav_logout -> {
+                    // Выход из аккаунта
                     RetrofitClient.clearToken(this)
                     startActivity(Intent(this, MainActivity::class.java))
                     finish()
-                    Toast.makeText(this, "Выход выполнен", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Logout realizado", Toast.LENGTH_SHORT).show()
                 }
             }
             drawerLayout.closeDrawer(GravityCompat.START)
             true
         }
 
-        // Инициализация Spinners
-        val sortOrders = listOf("Ascending", "Descending")
+        // Инициализация спиннеров для сортировки
+        val sortOrders = listOf("Crescente", "Decrescente")
         val orderAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, sortOrders)
         orderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         sortOrderSpinner.adapter = orderAdapter
@@ -233,119 +276,132 @@ class TableActivity : AppCompatActivity() {
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
 
-        // Открытие меню при клике на иконку
+        // Открытие бокового меню по клику на иконку
         toolbar.setNavigationOnClickListener {
             drawerLayout.openDrawer(GravityCompat.START)
         }
 
-        // Загрузка таблицы Users по умолчанию
+        // Загрузка таблицы пользователей по умолчанию
         navView.menu.findItem(R.id.nav_users).isChecked = true
         navView.menu.performIdentifierAction(R.id.nav_users, 0)
     }
 
+    // Обновление списка полей для сортировки в спиннере
     private fun updateSortFieldSpinner(fields: List<String>) {
         val fieldAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, fields)
         fieldAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         sortFieldSpinner.adapter = fieldAdapter
     }
 
+    // Обновление сортировки таблицы в зависимости от выбранных параметров
     private fun updateSorting() {
         val selectedField = sortFieldSpinner.selectedItem?.toString() ?: return
         val selectedOrder = sortOrderSpinner.selectedItem.toString()
 
-        when (tableTitle.text) {
-            "User Table" -> {
+        when (currentTableType) {
+            TableType.USER -> {
                 when (selectedField) {
                     "ID" -> users.sortBy { it.user_id }
                     "Name" -> users.sortBy { it.user_name }
                     "Email" -> users.sortBy { it.email }
                     "Login" -> users.sortBy { it.login }
                 }
-                if (selectedOrder == "Descending") users.reverse()
-                val tableAdapter = TableAdapter(this, tableLayout, users)
-                tableAdapter.populateTable("User")
+                if (selectedOrder == "Decrescente") users.reverse()
+                tableAdapter = TableAdapter(this, tableLayout, users)
+                tableAdapter?.populateTable("User")
             }
-            "Shipment Table" -> {
+            TableType.SHIPMENT -> {
                 when (selectedField) {
                     "ID" -> shipments.sortBy { it.shipment_id }
                     "Date" -> shipments.sortBy { it.date_of_shipment }
-                    "User" -> shipments.sortBy { it.user }
+                    "Usuario" -> shipments.sortBy { it.user }
                 }
-                if (selectedOrder == "Descending") shipments.reverse()
-                val tableAdapter = TableAdapter(this, tableLayout, shipments)
-                tableAdapter.populateTable("Shipment")
+                if (selectedOrder == "Decrescente") shipments.reverse()
+                tableAdapter = TableAdapter(this, tableLayout, shipments)
+                fetchUsersAndUpdateAdapter(tableAdapter!!) { tableAdapter?.populateTable("Shipment") }
             }
-            "Product Table" -> {
+            TableType.PRODUCT -> {
                 when (selectedField) {
                     "ID" -> products.sortBy { it.product_id }
                     "Name" -> products.sortBy { it.product_name }
-                    "Shipment" -> products.sortBy { it.shipment }
+                    "Produto" -> products.sortBy { it.shipment }
                     "Manufacturer" -> products.sortBy { it.manufacturer }
                 }
-                if (selectedOrder == "Descending") products.reverse()
-                val tableAdapter = TableAdapter(this, tableLayout, products)
-                tableAdapter.populateTable("Product")
+                if (selectedOrder == "Decrescente") products.reverse()
+                tableAdapter = TableAdapter(this, tableLayout, products)
+                tableAdapter?.populateTable("Product")
             }
-            "Write Off Products Table" -> {
+            TableType.WRITE_OFF -> {
                 when (selectedField) {
                     "ID" -> writeOffProducts.sortBy { it.id_product_write_off }
-                    "User" -> writeOffProducts.sortBy { it.user }
-                    "Quantity" -> writeOffProducts.sortBy { it.quantity }
-                    "Date" -> writeOffProducts.sortBy { it.product_write_off_date }
+                    "Usuario" -> writeOffProducts.sortBy { it.user }
+                    "Quantidade" -> writeOffProducts.sortBy { it.quantity }
+                    "Data" -> writeOffProducts.sortBy { it.product_write_off_date }
                 }
-                if (selectedOrder == "Descending") writeOffProducts.reverse()
-                val tableAdapter = TableAdapter(this, tableLayout, writeOffProducts)
-                tableAdapter.populateTable("WriteOffProducts")
+                if (selectedOrder == "Decrescente") writeOffProducts.reverse()
+                tableAdapter = TableAdapter(this, tableLayout, writeOffProducts)
+                fetchUsersAndUpdateAdapter(tableAdapter!!) { tableAdapter?.populateTable("WriteOffProducts") }
             }
-            "Products Current Quantity" -> {
+            TableType.QUANTITY -> {
                 when (selectedField) {
                     "ID" -> productsCurrentQuantities.sortBy { it.product_current_quantity_id }
-                    "Product Name" -> productsCurrentQuantities.sortBy { it.product }
-                    "Available Quantity" -> productsCurrentQuantities.sortBy { it.quantity }
+                    "Nome do Produto" -> productsCurrentQuantities.sortBy { it.product }
+                    "Quantidade Disponível" -> productsCurrentQuantities.sortBy { it.quantity }
                 }
-                if (selectedOrder == "Descending") productsCurrentQuantities.reverse()
-                val tableAdapter = TableAdapter(this, tableLayout, productsCurrentQuantities)
-                tableAdapter.populateTable("ProductsCurrentQuantity")
+                if (selectedOrder == "Decrescente") productsCurrentQuantities.reverse()
+                tableAdapter = TableAdapter(this, tableLayout, productsCurrentQuantities)
+                tableAdapter?.populateTable("ProductsCurrentQuantity")
             }
-            "Extradition" -> {
+            TableType.EXTRADITION -> {
                 when (selectedField) {
                     "ID" -> extraditions.sortBy { it.extradition_id }
-                    "User" -> extraditions.sortBy { it.user }
-                    "Date" -> extraditions.sortBy { it.date_of_extradition }
-                    "Quantity" -> extraditions.sortBy { it.quantity }
+                    "Usuario" -> extraditions.sortBy { it.user }
+                    "Data" -> extraditions.sortBy { it.date_of_extradition }
+                    "Quantidade" -> extraditions.sortBy { it.quantity }
                 }
-                if (selectedOrder == "Descending") extraditions.reverse()
-                val tableAdapter = TableAdapter(this, tableLayout, extraditions)
-                tableAdapter.populateTable("Extradition")
+                if (selectedOrder == "Decrescente") extraditions.reverse()
+                tableAdapter = TableAdapter(this, tableLayout, extraditions)
+                fetchUsersAndUpdateAdapter(tableAdapter!!) { tableAdapter?.populateTable("Extradition") }
             }
         }
     }
 
+    // Отображение таблицы поставок
     private fun showShipmentTable() {
         tableTitle.text = "Shipment Table"
+        currentTableType = TableType.SHIPMENT
         fetchShipments()
     }
 
-    private fun showProductTable() {
+    // Отображение таблицы продуктов
+    private fun showProduct() {
         tableTitle.text = "Product Table"
+        currentTableType = TableType.PRODUCT
         fetchProducts()
     }
 
+    // Отображение таблицы выдач
     private fun showExtradition() {
         tableTitle.text = "Extradition"
+        currentTableType = TableType.EXTRADITION
         fetchExtradition()
     }
 
+    // Отображение таблицы текущих количеств продуктов
     private fun showProductsCurrentQuantity() {
         tableTitle.text = "Products Current Quantity"
+        currentTableType = TableType.QUANTITY
         fetchProductsCurrentQuantity()
     }
 
+    // Отображение таблицы списанных продуктов
     private fun showWriteOffProducts() {
         tableTitle.text = "Write Off Products Table"
+        currentTableType = TableType.WRITE_OFF
         fetchWriteOffProducts()
     }
 
+    // Загрузка пользователей с фильтрацией и сортировкой
     private fun fetchUsers(search: String? = null, ordering: String? = null, filters: Map<String, String> = emptyMap()) {
         val call = RetrofitClient.getApiService(this).getUsersFiltered(ordering, search, filters)
         call.enqueue(object : Callback<List<User>> {
@@ -353,8 +409,8 @@ class TableActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     users.clear()
                     response.body()?.let { users.addAll(it) }
-                    val tableAdapter = TableAdapter(this@TableActivity, tableLayout, users)
-                    tableAdapter.populateTable("User")
+                    tableAdapter = TableAdapter(this@TableActivity, tableLayout, users)
+                    tableAdapter?.populateTable("User")
                 } else {
                     handleErrorResponse(response.code())
                     Log.e("TableActivity", "Error: ${response.code()} - ${response.message()}")
@@ -362,8 +418,42 @@ class TableActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<List<User>>, t: Throwable) {
-                Toast.makeText(this@TableActivity, "Ошибка сети: ${t.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@TableActivity, "Erro de rede: ${t.message}", Toast.LENGTH_LONG).show()
                 Log.e("TableActivity", "Failure: ${t.message}")
+            }
+        })
+    }
+
+    // Загрузка пользователей для обновления адаптера (с кэшированием)
+    private fun fetchUsersAndUpdateAdapter(tableAdapter: TableAdapter<*>, onUsersLoaded: () -> Unit) {
+        if (cachedUsers.isNotEmpty()) {
+            Log.d("TableActivity", "Using cached users: $cachedUsers")
+            tableAdapter.updateUsers(cachedUsers)
+            onUsersLoaded()
+            return
+        }
+
+        val call = RetrofitClient.getApiService(this).getUsers()
+        call.enqueue(object : Callback<List<User>> {
+            override fun onResponse(call: Call<List<User>>, response: Response<List<User>>) {
+                if (response.isSuccessful) {
+                    response.body()?.let {
+                        cachedUsers = it
+                        Log.d("TableActivity", "Fetched users: $it")
+                        tableAdapter.updateUsers(it)
+                        onUsersLoaded()
+                    }
+                } else {
+                    Log.e("TableActivity", "Error fetching users: ${response.code()}")
+                    Toast.makeText(this@TableActivity, "Erro ao carregar usuários: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    onUsersLoaded()
+                }
+            }
+
+            override fun onFailure(call: Call<List<User>>, t: Throwable) {
+                Log.e("TableActivity", "Failure fetching users: ${t.message}")
+                Toast.makeText(this@TableActivity, "Erro de rede: ${t.message}", Toast.LENGTH_SHORT).show()
+                onUsersLoaded()
             }
         })
     }
@@ -375,7 +465,10 @@ class TableActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     shipments.clear()
                     response.body()?.let { shipments.addAll(it) }
-                    filterShipments(searchEditText.text.toString())
+                    tableAdapter = TableAdapter(this@TableActivity, tableLayout, shipments)
+                    fetchUsersAndUpdateAdapter(tableAdapter!!) {
+                        filterShipments(searchEditText.text.toString())
+                    }
                 } else {
                     handleErrorResponse(response.code())
                     Log.e("TableActivity", "Error: ${response.code()}")
@@ -383,12 +476,13 @@ class TableActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<List<Shipment>>, t: Throwable) {
-                Toast.makeText(this@TableActivity, "Ошибка сети: ${t.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@TableActivity, "Erro de rede: ${t.message}", Toast.LENGTH_LONG).show()
                 Log.e("TableActivity", "Failure: ${t.message}")
             }
         })
     }
 
+    // Загрузка продуктов с фильтрацией
     private fun fetchProducts(filters: Map<String, String> = emptyMap()) {
         val call = RetrofitClient.getApiService(this).getProductsFiltered(filters = filters)
         call.enqueue(object : Callback<List<Product>> {
@@ -396,8 +490,8 @@ class TableActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     products.clear()
                     response.body()?.let { products.addAll(it) }
-                    val tableAdapter = TableAdapter(this@TableActivity, tableLayout, products)
-                    tableAdapter.populateTable("Product")
+                    tableAdapter = TableAdapter(this@TableActivity, tableLayout, products)
+                    tableAdapter?.populateTable("Product")
                 } else {
                     handleErrorResponse(response.code())
                     Log.e("TableActivity", "Error: ${response.code()}")
@@ -405,12 +499,13 @@ class TableActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<List<Product>>, t: Throwable) {
-                Toast.makeText(this@TableActivity, "Ошибка сети: ${t.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@TableActivity, "Erro de rede: ${t.message}", Toast.LENGTH_LONG).show()
                 Log.e("TableActivity", "Failure: ${t.message}")
             }
         })
     }
 
+    // Загрузка выдач
     private fun fetchExtradition() {
         val call = RetrofitClient.getApiService(this).getExtraditions()
         call.enqueue(object : Callback<List<Extradition>> {
@@ -418,8 +513,10 @@ class TableActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     extraditions.clear()
                     response.body()?.let { extraditions.addAll(it) }
-                    val tableAdapter = TableAdapter(this@TableActivity, tableLayout, extraditions)
-                    tableAdapter.populateTable("Extradition")
+                    tableAdapter = TableAdapter(this@TableActivity, tableLayout, extraditions)
+                    fetchUsersAndUpdateAdapter(tableAdapter!!) {
+                        tableAdapter?.populateTable("Extradition")
+                    }
                 } else {
                     handleErrorResponse(response.code())
                     Log.e("TableActivity", "Error: ${response.code()}")
@@ -427,12 +524,13 @@ class TableActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<List<Extradition>>, t: Throwable) {
-                Toast.makeText(this@TableActivity, "Ошибка сети: ${t.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@TableActivity, "Erro de rede: ${t.message}", Toast.LENGTH_LONG).show()
                 Log.e("TableActivity", "Failure: ${t.message}")
             }
         })
     }
 
+    // Загрузка текущих количеств продуктов
     private fun fetchProductsCurrentQuantity() {
         val call = RetrofitClient.getApiService(this).getProductsCurrentQuantity()
         call.enqueue(object : Callback<List<ProductsCurrentQuantity>> {
@@ -440,8 +538,8 @@ class TableActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     productsCurrentQuantities.clear()
                     response.body()?.let { productsCurrentQuantities.addAll(it) }
-                    val tableAdapter = TableAdapter(this@TableActivity, tableLayout, productsCurrentQuantities)
-                    tableAdapter.populateTable("ProductsCurrentQuantity")
+                    tableAdapter = TableAdapter(this@TableActivity, tableLayout, productsCurrentQuantities)
+                    tableAdapter?.populateTable("ProductsCurrentQuantity")
                 } else {
                     handleErrorResponse(response.code())
                     Log.e("TableActivity", "Error: ${response.code()}")
@@ -449,12 +547,13 @@ class TableActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<List<ProductsCurrentQuantity>>, t: Throwable) {
-                Toast.makeText(this@TableActivity, "Ошибка сети: ${t.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@TableActivity, "Erro de rede: ${t.message}", Toast.LENGTH_LONG).show()
                 Log.e("TableActivity", "Failure: ${t.message}")
             }
         })
     }
 
+    // Загрузка списанных продуктов с фильтрацией
     private fun fetchWriteOffProducts(filters: Map<String, String> = emptyMap()) {
         val call = RetrofitClient.getApiService(this).getWriteOffProductsFiltered(filters)
         call.enqueue(object : Callback<List<WriteOffOfProducts>> {
@@ -462,8 +561,10 @@ class TableActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     writeOffProducts.clear()
                     response.body()?.let { writeOffProducts.addAll(it) }
-                    val tableAdapter = TableAdapter(this@TableActivity, tableLayout, writeOffProducts)
-                    tableAdapter.populateTable("WriteOffProducts")
+                    tableAdapter = TableAdapter(this@TableActivity, tableLayout, writeOffProducts)
+                    fetchUsersAndUpdateAdapter(tableAdapter!!) {
+                        tableAdapter?.populateTable("WriteOffProducts")
+                    }
                 } else {
                     handleErrorResponse(response.code())
                     Log.e("TableActivity", "Error: ${response.code()}")
@@ -471,12 +572,13 @@ class TableActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<List<WriteOffOfProducts>>, t: Throwable) {
-                Toast.makeText(this@TableActivity, "Ошибка сети: ${t.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@TableActivity, "Erro de rede: ${t.message}", Toast.LENGTH_LONG).show()
                 Log.e("TableActivity", "Failure: ${t.message}")
             }
         })
     }
 
+    // Фильтрация пользователей по запросу
     private fun filterUsers(query: String) {
         val filteredUsers = if (query.isEmpty()) {
             users
@@ -488,10 +590,11 @@ class TableActivity : AppCompatActivity() {
                         it.login.contains(query, ignoreCase = true)
             }
         }
-        val tableAdapter = TableAdapter(this, tableLayout, filteredUsers)
-        tableAdapter.populateTable("User")
+        tableAdapter = TableAdapter(this, tableLayout, filteredUsers)
+        tableAdapter?.populateTable("User")
     }
 
+    // Фильтрация поставок по запросу
     private fun filterShipments(query: String) {
         val filteredShipments = if (query.isEmpty()) {
             shipments
@@ -502,10 +605,11 @@ class TableActivity : AppCompatActivity() {
                         it.user.toString().contains(query, ignoreCase = true)
             }
         }
-        val tableAdapter = TableAdapter(this, tableLayout, filteredShipments)
-        tableAdapter.populateTable("Shipment")
+        tableAdapter = TableAdapter(this, tableLayout, filteredShipments)
+        fetchUsersAndUpdateAdapter(tableAdapter!!) { tableAdapter?.populateTable("Shipment") }
     }
 
+    // Фильтрация продуктов по запросу
     private fun filterProducts(query: String) {
         val filteredProducts = if (query.isEmpty()) {
             products
@@ -517,10 +621,11 @@ class TableActivity : AppCompatActivity() {
                         it.manufacturer.contains(query, ignoreCase = true)
             }
         }
-        val tableAdapter = TableAdapter(this, tableLayout, filteredProducts)
-        tableAdapter.populateTable("Product")
+        tableAdapter = TableAdapter(this, tableLayout, filteredProducts)
+        tableAdapter?.populateTable("Product")
     }
 
+    // Фильтрация списанных продуктов по запросу
     private fun filterWriteOffOfProducts(query: String) {
         val filteredWriteOffs = if (query.isEmpty()) {
             writeOffProducts
@@ -533,10 +638,11 @@ class TableActivity : AppCompatActivity() {
                         it.product_write_off_date.contains(query, ignoreCase = true)
             }
         }
-        val tableAdapter = TableAdapter(this, tableLayout, filteredWriteOffs)
-        tableAdapter.populateTable("WriteOffProducts")
+        tableAdapter = TableAdapter(this, tableLayout, filteredWriteOffs)
+        fetchUsersAndUpdateAdapter(tableAdapter!!) { tableAdapter?.populateTable("WriteOffProducts") }
     }
 
+    // Фильтрация выдач по запросу
     private fun filterExtradition(query: String) {
         val filteredExtraditions = if (query.isEmpty()) {
             extraditions
@@ -548,10 +654,11 @@ class TableActivity : AppCompatActivity() {
                         it.user.toString().contains(query, ignoreCase = true)
             }
         }
-        val tableAdapter = TableAdapter(this, tableLayout, filteredExtraditions)
-        tableAdapter.populateTable("Extradition")
+        tableAdapter = TableAdapter(this, tableLayout, filteredExtraditions)
+        fetchUsersAndUpdateAdapter(tableAdapter!!) { tableAdapter?.populateTable("Extradition") }
     }
 
+    // Фильтрация текущих количеств продуктов по запросу
     private fun filterProductsCurrentQuantity(query: String) {
         val filteredProductsCurrentQuantities = if (query.isEmpty()) {
             productsCurrentQuantities
@@ -562,27 +669,30 @@ class TableActivity : AppCompatActivity() {
                         it.quantity.toString().contains(query, ignoreCase = true)
             }
         }
-        val tableAdapter = TableAdapter(this, tableLayout, filteredProductsCurrentQuantities)
-        tableAdapter.populateTable("ProductsCurrentQuantity")
+        tableAdapter = TableAdapter(this, tableLayout, filteredProductsCurrentQuantities)
+        tableAdapter?.populateTable("ProductsCurrentQuantity")
     }
 
+    // Установка видимости спиннера фильтрации
     private fun setFilterSpinnerVisibility(isVisible: Boolean) {
         filterRoleSpinner.visibility = if (isVisible) View.VISIBLE else View.GONE
     }
 
+    // Обработка ошибок API
     private fun handleErrorResponse(code: Int) {
         when (code) {
             401 -> {
-                Toast.makeText(this, "Не авторизован. Пожалуйста, войдите снова.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Não autorizado. Por favor, faça login novamente.", Toast.LENGTH_LONG).show()
                 RetrofitClient.clearToken(this)
                 startActivity(Intent(this, MainActivity::class.java))
                 finish()
             }
-            403 -> Toast.makeText(this, "Доступ запрещён.", Toast.LENGTH_LONG).show()
-            else -> Toast.makeText(this, "Ошибка сервера: $code", Toast.LENGTH_LONG).show()
+            403 -> Toast.makeText(this, "Acesso proibido.", Toast.LENGTH_LONG).show()
+            else -> Toast.makeText(this, "Erro do servidor: $code", Toast.LENGTH_LONG).show()
         }
     }
 
+    // Обработка нажатия кнопки "Назад"
     override fun onBackPressed() {
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START)

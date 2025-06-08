@@ -38,19 +38,18 @@ import retrofit2.Response
 class TableAdapter<T>(
     private val context: Context,
     private val tableLayout: TableLayout,
-    private val data: List<T>
+    private var data: List<T>
 ) {
+    private var users: List<User> = emptyList()
+
+    fun updateUsers(newUsers: List<User>) {
+        users = newUsers
+    }
 
     fun populateTable(dataType: String, updatedData: List<T> = data) {
-        // Используем переданный список данных или старый, если новый не указан
         val dataToUse = if (updatedData.isNotEmpty()) updatedData else data
-
-
         Log.d("TableAdapter", "Populating table with data: $dataToUse")
-        // Очистка TableLayout перед заполнением
         tableLayout.removeAllViews()
-
-        // Добавление заголовков для разных таблиц
         val headerRow = TableRow(context)
         when (dataType) {
             "User" -> {
@@ -65,7 +64,7 @@ class TableAdapter<T>(
                 headerRow.addView(createTextView("Shipment ID"))
                 headerRow.addView(createTextView("Quantity"))
                 headerRow.addView(createTextView("Date of Shipment"))
-                headerRow.addView(createTextView("User ID"))
+                headerRow.addView(createTextView("User Login"))
             }
             "Product" -> {
                 headerRow.addView(createTextView("Product ID"))
@@ -82,7 +81,7 @@ class TableAdapter<T>(
                 headerRow.addView(createTextView("Extradition ID"))
                 headerRow.addView(createTextView("Date of extradition"))
                 headerRow.addView(createTextView("Quantity"))
-                headerRow.addView(createTextView("User"))
+                headerRow.addView(createTextView("User Login"))
             }
             "ProductsCurrentQuantity" -> {
                 headerRow.addView(createTextView("Product current quantity ID"))
@@ -94,13 +93,18 @@ class TableAdapter<T>(
                 headerRow.addView(createTextView("Product_write_off_date"))
                 headerRow.addView(createTextView("Quantity"))
                 headerRow.addView(createTextView("Reason"))
-                headerRow.addView(createTextView("User"))
+                headerRow.addView(createTextView("User Login"))
             }
         }
         tableLayout.addView(headerRow)
 
+        // Функция для получения логина по user_id
+        fun getUserLogin(userId: Int): String {
+            Log.d("TableAdapter", "Looking for user_id: $userId in users: $users")
+            return users.find { it.user_id == userId }?.login ?: "Unknown"
+        }
 
-        // Добавляем строки с данными для каждого элемента списка
+        // Добавляем строки с данными
         for (item in dataToUse) {
             val row = TableRow(context)
             when (item) {
@@ -112,30 +116,25 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.phone_number ?: ""))
                     row.addView(createTextView(item.role))
 
-                    // Добавляем ячейку с иконками действий только для админов
                     if (getCurrentUserRole() == "admin") {
                         row.addView(createActionCell(
                             onEditClick = { openEditUserDialog(item) },
                             onDeleteClick = { deleteUser(item.user_id) }
                         ))
                     } else {
-                        // Добавляем пустую ячейку для сохранения выравнивания
                         row.addView(LinearLayout(context).apply {
                             layoutParams = TableRow.LayoutParams(
                                 ViewGroup.LayoutParams.WRAP_CONTENT,
                                 ViewGroup.LayoutParams.WRAP_CONTENT
-                            ).apply {
-                                marginStart = 16
-                            }
+                            ).apply { marginStart = 16 }
                         })
                     }
                 }
-
                 is Shipment -> {
                     row.addView(createTextView(item.shipment_id.toString()))
                     row.addView(createTextView(item.quantity.toString()))
                     row.addView(createTextView(item.date_of_shipment))
-                    row.addView(createTextView(item.user.toString()))
+                    row.addView(createTextView(getUserLogin(item.user))) // Используем логин вместо user_id
 
                     if (getCurrentUserRole() == "admin") {
                         row.addView(createActionCell(
@@ -143,17 +142,13 @@ class TableAdapter<T>(
                             onDeleteClick = { deleteShipment(item.shipment_id) }
                         ))
                     } else {
-                        // Добавляем пустую ячейку для сохранения выравнивания
                         row.addView(LinearLayout(context).apply {
                             layoutParams = TableRow.LayoutParams(
                                 ViewGroup.LayoutParams.WRAP_CONTENT,
                                 ViewGroup.LayoutParams.WRAP_CONTENT
-                            ).apply {
-                                marginStart = 16
-                            }
+                            ).apply { marginStart = 16 }
                         })
                     }
-
                 }
                 is Product -> {
                     row.addView(createTextView(item.product_id.toString()))
@@ -163,7 +158,6 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.manufacturer))
                     row.addView(createTextView(item.weight.toString()))
                     row.addView(createTextView(item.shipment.toString()))
-                    //раньше было item.shipment.shipment_id но что-то не работало так
                     row.addView(createTextView(item.write_off_of_products?.toString() ?: "N/A"))
                     row.addView(createTextView(item.extradition?.toString() ?: "N/A"))
 
@@ -173,14 +167,11 @@ class TableAdapter<T>(
                             onDeleteClick = { deleteProduct(item.product_id) }
                         ))
                     } else {
-                        // Добавляем пустую ячейку для сохранения выравнивания
                         row.addView(LinearLayout(context).apply {
                             layoutParams = TableRow.LayoutParams(
                                 ViewGroup.LayoutParams.WRAP_CONTENT,
                                 ViewGroup.LayoutParams.WRAP_CONTENT
-                            ).apply {
-                                marginStart = 16
-                            }
+                            ).apply { marginStart = 16 }
                         })
                     }
                 }
@@ -189,9 +180,7 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.product_write_off_date))
                     row.addView(createTextView(item.quantity.toString()))
                     row.addView(createTextView(item.reason))
-                    row.addView(createTextView(item.user.toString()))
-
-
+                    row.addView(createTextView(getUserLogin(item.user))) // Используем логин вместо user_id
 
                     if (getCurrentUserRole() == "admin") {
                         row.addView(createActionCell(
@@ -199,14 +188,11 @@ class TableAdapter<T>(
                             onDeleteClick = { deleteWriteOffOfProducts(item.id_product_write_off) }
                         ))
                     } else {
-                        // Добавляем пустую ячейку для сохранения выравнивания
                         row.addView(LinearLayout(context).apply {
                             layoutParams = TableRow.LayoutParams(
                                 ViewGroup.LayoutParams.WRAP_CONTENT,
                                 ViewGroup.LayoutParams.WRAP_CONTENT
-                            ).apply {
-                                marginStart = 16
-                            }
+                            ).apply { marginStart = 16 }
                         })
                     }
                 }
@@ -214,9 +200,7 @@ class TableAdapter<T>(
                     row.addView(createTextView(item.extradition_id.toString()))
                     row.addView(createTextView(item.date_of_extradition))
                     row.addView(createTextView(item.quantity.toString()))
-                    row.addView(createTextView(item.user.toString()))
-
-
+                    row.addView(createTextView(getUserLogin(item.user))) // Используем логин вместо user_id
 
                     if (getCurrentUserRole() == "admin") {
                         row.addView(createActionCell(
@@ -224,25 +208,18 @@ class TableAdapter<T>(
                             onDeleteClick = { deleteExtradition(item.extradition_id) }
                         ))
                     } else {
-                        // Добавляем пустую ячейку для сохранения выравнивания
                         row.addView(LinearLayout(context).apply {
                             layoutParams = TableRow.LayoutParams(
                                 ViewGroup.LayoutParams.WRAP_CONTENT,
                                 ViewGroup.LayoutParams.WRAP_CONTENT
-                            ).apply {
-                                marginStart = 16
-                            }
+                            ).apply { marginStart = 16 }
                         })
                     }
                 }
                 is ProductsCurrentQuantity -> {
-
-                    //Log.d("PopulateTable", "ProductCurrentQuantity Item: ${item.product_current_quantity_id}, Quantity: ${item.quantity}, Product: ${item.product}")
-
                     row.addView(createTextView(item.product_current_quantity_id.toString()))
                     row.addView(createTextView(item.quantity.toString()))
                     row.addView(createTextView(item.product.toString()))
-
 
                     if (getCurrentUserRole() == "admin") {
                         row.addView(createActionCell(
@@ -250,25 +227,13 @@ class TableAdapter<T>(
                             onDeleteClick = { deleteProductsCurrentQuantity(item.product_current_quantity_id) }
                         ))
                     } else {
-                        // Добавляем пустую ячейку для сохранения выравнивания
                         row.addView(LinearLayout(context).apply {
                             layoutParams = TableRow.LayoutParams(
                                 ViewGroup.LayoutParams.WRAP_CONTENT,
                                 ViewGroup.LayoutParams.WRAP_CONTENT
-                            ).apply {
-                                marginStart = 16
-                            }
+                            ).apply { marginStart = 16 }
                         })
                     }
-
-//                    // Логирование ошибок, если данные пустые или невалидные
-//                    if (item.product_current_quantity_id == null) {
-//                        Log.e("PopulateTable", "Product Current Quantity ID is null for item: $item")
-//                    }
-//                    if (item.product == null) {
-//                        Log.e("PopulateTable", "Product is null for item: $item")
-//                    }
-
                 }
             }
             tableLayout.addView(row)
@@ -284,7 +249,6 @@ class TableAdapter<T>(
                 "Extradition" -> addButtonToTable("Add Extradition") { openAddExtraditionDialog() }
             }
         }
-
     }
 
 
